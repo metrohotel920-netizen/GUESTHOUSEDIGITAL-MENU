@@ -186,7 +186,7 @@ body {
 .preview-item-price { font-family: 'Cinzel', serif; color: var(--gold); font-size: 0.75rem; white-space: nowrap; }
 .preview-add-btn { width: 22px; height: 22px; border-radius: 50%; background: var(--gold); color: var(--black); border: none; cursor: pointer; font-size: 0.9rem; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: var(--transition); }
 .preview-add-btn:hover { background: var(--gold-light); transform: scale(1.1); }
-.expand-arrow { font-size: 0.65rem; color: var(--gold-dim); margin-top: 10px; }
+.expand-arrow font-size: 0.65rem; color: var(--gold-dim); margin-top: 10px; }
 
 /* ===== ITEMS VIEW ===== */
 #items-view { display: none; max-width: 800px; margin: 0 auto; }
@@ -505,7 +505,25 @@ body {
   </div>
 </div>
 
-<!-- Firebase SDKs -->
+<div id="room-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:#141414;padding:25px;border:2px solid #cda434;border-radius:10px;width:90%;max-width:400px;text-align:center;">
+    <h3 style="color:#cda434;margin-bottom:15px;">Enter Room Number</h3>
+    <input
+      type="text"
+      id="room-number"
+      placeholder="Room No."
+      style="width:100%;padding:12px;border:1px solid #cda434;background:#222;color:white;border-radius:6px;margin-bottom:15px;"
+    >
+    <button
+      onclick="confirmRoomOrder()"
+      style="width:100%;padding:12px;background:#cda434;color:black;border:none;border-radius:6px;font-weight:bold;cursor:pointer;"
+    >
+      Continue to WhatsApp
+    </button>
+    <button style="background:none; border:none; color:var(--gray); margin-top:16px; cursor:pointer;" onclick="document.getElementById('room-modal').style.display = 'none'">Cancel</button>
+  </div>
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
@@ -638,9 +656,6 @@ window.addEventListener('load', () => {
 
 // ==============================
 // RENDER CATEGORIES (with accordion items)
-// ==============================
-// ==============================
-// CATEGORY SVG ICONS
 // ==============================
 function getCatSVG(icon) {
   const icons = {
@@ -800,7 +815,7 @@ window.handleSearch = function(val) {
 }
 
 // ==============================
-// CART
+// CART & PLACING ORDERS
 // ==============================
 window.addToCart = function(itemId) {
   const item = db.items.find(i => i.id === itemId);
@@ -864,13 +879,33 @@ function renderCartBody() {
 window.openCart = function() { renderCartBody(); document.getElementById('cart-panel').classList.add('open'); }
 window.closeCart = function() { document.getElementById('cart-panel').classList.remove('open'); }
 
-window.placeOrder = function() {
-  if (cart.length === 0) { showToast('Cart is empty'); return; }
+window.placeOrder = function () {
+  if (cart.length === 0) {
+    showToast('Cart is empty');
+    return;
+  }
+  document.getElementById('room-number').value = '';
+  document.getElementById('room-modal').style.display = 'flex';
+}
+
+window.confirmRoomOrder = function() {
+  const roomNum = document.getElementById('room-number').value.trim();
+  if(!roomNum) {
+    alert("Please enter a room number.");
+    return;
+  }
+  
   const total = cart.reduce((sum,c) => sum + c.price * c.qty, 0);
   const token = '#' + (orderCounter++);
   const itemsText = cart.map(c => `• ${c.name} x${c.qty} = Rs.${c.price*c.qty}`).join('\n');
-  const wa = `Order ${token}\n\n${itemsText}\n\nTotal: Rs.${total}\n\n*Note: All food takes 45 to 60 min to be ready.*`;
-  cart = []; updateCartUI(); closeCart();
+  
+  const wa = `Order ${token}\nRoom Number: ${roomNum}\n\n${itemsText}\n\nTotal: Rs.${total}\n\n*Note: All food takes 45 to 60 min to be ready.*`;
+  
+  // Clear cart, close modally active elements & redirect
+  cart = []; 
+  updateCartUI(); 
+  closeCart();
+  document.getElementById('room-modal').style.display = 'none';
   window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(wa)}`, '_blank');
 }
 
