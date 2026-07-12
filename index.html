@@ -22,6 +22,33 @@
       --shadow: 0 8px 20px rgba(0,0,0,0.06);
     }
 
+    /* ==============================
+       DAY / NIGHT THEME
+       Bright & airy during the day, switches to a dark, easy-on-the-eyes
+       palette automatically at night (can be overridden manually).
+       ============================== */
+    body.dark-mode {
+      --bg-color: #0E1420;
+      --surface-color: #182236;
+      --primary-color: #FF6B6B;
+      --primary-hover: #FF4747;
+      --text-main: #EEF2F8;
+      --text-muted: #92A0B8;
+      --border-color: #2B3650;
+      --success: #34D399;
+      --shadow: 0 8px 24px rgba(0,0,0,0.45);
+    }
+    body, header, .category-card, .menu-item-card, .cart-panel, .modal-box,
+    .admin-panel, .floating-cart, .footer-review-card, .icon-btn, .qty-ctrl,
+    .admin-tab, .footer-review-card, .item-code {
+      transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
+    }
+    .theme-toggle-btn { position: relative; }
+    .theme-toggle-btn .theme-icon-sun { display: inline; }
+    .theme-toggle-btn .theme-icon-moon { display: none; }
+    body.dark-mode .theme-toggle-btn .theme-icon-sun { display: none; }
+    body.dark-mode .theme-toggle-btn .theme-icon-moon { display: inline; }
+
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; -webkit-tap-highlight-color: transparent; }
 
     html { -webkit-text-size-adjust: 100%; }
@@ -375,12 +402,12 @@
       background: #fff; color: var(--text-main); text-decoration: none; font-weight: 600; font-size: 0.9rem;
       padding: 10px 18px; border-radius: 30px; display: inline-flex; align-items: center; gap: 8px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.15); transition: transform 0.15s; white-space: nowrap;
+      border: none; cursor: pointer; font-family: inherit;
     }
     .google-review-btn:active { transform: scale(0.96); }
     .google-g {
-      display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px;
-      border-radius: 50%; background: conic-gradient(from -45deg, #EA4335 0 90deg, #4285F4 90deg 180deg, #34A853 180deg 270deg, #FBBC05 270deg 360deg);
-      color: #fff; font-size: 0.72rem; font-weight: 800; font-family: Georgia, serif;
+      display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px;
+      font-size: 1rem;
     }
 
     .social-row { display: flex; justify-content: center; gap: 14px; margin-top: 16px; }
@@ -402,6 +429,20 @@
 </head>
 <body>
 
+  <script>
+    // Applied immediately (outside the module script) so there's no flash of the
+    // wrong theme while the rest of the page loads.
+    (function() {
+      function getAutoTheme() {
+        var h = new Date().getHours();
+        return (h >= 19 || h < 6) ? 'dark' : 'light';
+      }
+      var saved = localStorage.getItem('metroMenuTheme');
+      var theme = saved || getAutoTheme();
+      if (theme === 'dark') document.body.classList.add('dark-mode');
+    })();
+  </script>
+
   <!-- Loading Screen -->
   <div id="loading-screen">
     <div class="spinner"></div>
@@ -418,6 +459,9 @@
       </div>
     </div>
     <div class="header-actions">
+      <button class="icon-btn theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle day/night theme">
+        <span class="theme-icon-sun">☀️</span><span class="theme-icon-moon">🌙</span>
+      </button>
       <button class="icon-btn" onclick="openAdminLock()">⚙️</button>
       <button class="icon-btn" onclick="openCart()">
         🛒<div id="cart-badge" class="badge">0</div>
@@ -440,11 +484,11 @@
       <div class="footer-review-card">
         <div class="footer-review-text">
           <div class="footer-review-title">Enjoyed your meal?</div>
-          <div class="footer-review-sub">Leave us a review on Google — it really helps!</div>
+          <div class="footer-review-sub">Send us your feedback — we'd love to hear from you!</div>
         </div>
-        <a id="google-review-link" href="#" target="_blank" rel="noopener" class="google-review-btn">
-          <span class="google-g">G</span> Rate us
-        </a>
+        <button id="google-review-link" onclick="openFeedbackModal()" class="google-review-btn">
+          <span class="google-g">✉️</span> Rate us
+        </button>
       </div>
 
       <div class="social-row">
@@ -522,6 +566,19 @@
     </div>
   </div>
 
+  <div id="feedback-modal" class="modal-overlay">
+    <div class="modal-box">
+      <h3>Send Us Feedback</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:14px;">We'd love to hear about your stay. Reach us at:</p>
+      <div id="feedback-email-display" style="background:var(--bg-color); border:1px solid var(--border-color); border-radius:8px; padding:12px; font-weight:700; color:var(--text-main); margin-bottom:15px; word-break:break-all;"></div>
+      <div style="display: flex; gap: 10px;">
+        <button onclick="copyFeedbackEmail()" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--border-color); color:var(--text-main); font-weight:600;">Copy Email</button>
+        <a id="feedback-mailto-btn" href="#" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--success); color:white; font-weight:600; text-align:center; text-decoration:none; display:flex; align-items:center; justify-content:center;">Open Email App</a>
+      </div>
+      <button onclick="document.getElementById('feedback-modal').classList.remove('show')" style="width:100%; margin-top:10px; padding:10px; border:none; background:none; color:var(--text-muted); cursor:pointer; font-size:0.85rem;">Close</button>
+    </div>
+  </div>
+
   <div id="admin-lock-modal" class="modal-overlay">
     <div class="modal-box">
       <h3>Admin Access</h3>
@@ -584,7 +641,7 @@
     <div id="tab-settings" class="admin-tab-content" style="display:none;">
       <div style="background:var(--surface-color); padding:15px; border-radius:8px; margin-bottom:20px; border:1px solid var(--border-color);">
         <h3 style="margin-bottom:15px; color:var(--text-main);">Reviews &amp; Social Links</h3>
-        <div class="admin-form-group"><label>Google Review Link</label><input type="text" id="set-google" placeholder="https://g.page/r/.../review"></div>
+        <div class="admin-form-group"><label>Feedback / Review Email</label><input type="text" id="set-feedback-email" placeholder="metroguesthouse920@gmail.com"></div>
         <div class="admin-form-group"><label>Facebook Page Link</label><input type="text" id="set-facebook" placeholder="https://facebook.com/MetroHotelQuetta"></div>
         <div class="admin-form-group"><label>WhatsApp Number (with country code, no + or spaces)</label><input type="text" id="set-whatsapp" placeholder="923XXXXXXXXX"></div>
         <div class="admin-form-group"><label>YouTube Channel Link</label><input type="text" id="set-youtube" placeholder="https://youtube.com/@MetroHotelQuetta"></div>
@@ -623,12 +680,36 @@
   let db = { categories: [], items: [] };
 
   // ==============================
+  // DAY / NIGHT THEME
+  // ==============================
+  function getAutoTheme() {
+    const h = new Date().getHours();
+    return (h >= 19 || h < 6) ? 'dark' : 'light';
+  }
+  function applyTheme(theme) {
+    document.body.classList.toggle('dark-mode', theme === 'dark');
+    twemojiFix(document.querySelector('.theme-toggle-btn'));
+  }
+  window.toggleTheme = function() {
+    const current = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('metroMenuTheme', next);
+    applyTheme(next);
+    showToast(next === 'dark' ? 'Night mode on' : 'Day mode on');
+  }
+  // If the person hasn't manually picked a theme, re-check every few minutes so the
+  // menu switches itself right around sunset / sunrise while it's left open.
+  setInterval(() => {
+    if (!localStorage.getItem('metroMenuTheme')) applyTheme(getAutoTheme());
+  }, 10 * 60 * 1000);
+
+  // ==============================
   // REVIEWS & SOCIAL LINKS
   // Stored locally so the owner can edit them anytime from Admin > Settings
   // without needing a Firestore schema change.
   // ==============================
   const defaultLinks = {
-    google: 'https://www.google.com/maps/search/?api=1&query=Metro+Hotel+Quetta',
+    feedbackEmail: 'metroguesthouse920@gmail.com',
     facebook: 'https://www.facebook.com/MetroHotelQuetta',
     whatsapp: '92XXXXXXXXXX',
     youtube: 'https://www.youtube.com/@MetroHotelQuetta'
@@ -641,18 +722,47 @@
   }
   function applyFooterLinks() {
     const links = loadFooterLinks();
-    const g = document.getElementById('google-review-link');
     const f = document.getElementById('facebook-link');
     const w = document.getElementById('whatsapp-link');
     const y = document.getElementById('youtube-link');
-    if (g) g.href = links.google;
     if (f) f.href = links.facebook;
     if (w) w.href = 'https://wa.me/' + links.whatsapp.replace(/[^0-9]/g, '');
     if (y) y.href = links.youtube;
   }
+  // Opens a small popup with the feedback email instead of relying purely on a
+  // mailto: link, since many desktop browsers have no default mail app configured
+  // and a bare mailto click can silently do nothing.
+  window.openFeedbackModal = function() {
+    const links = loadFooterLinks();
+    const email = links.feedbackEmail;
+    document.getElementById('feedback-email-display').textContent = email;
+    const subject = encodeURIComponent('Feedback for Metro Guest House');
+    const body = encodeURIComponent('Hi Metro Guest House,\n\nHere is my feedback about my visit:\n\n');
+    document.getElementById('feedback-mailto-btn').href = `mailto:${email}?subject=${subject}&body=${body}`;
+    document.getElementById('feedback-modal').classList.add('show');
+  }
+  window.copyFeedbackEmail = function() {
+    const email = loadFooterLinks().feedbackEmail;
+    const done = () => showToast('Email copied: ' + email);
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(email).then(done).catch(() => fallbackCopy(email, done));
+    } else {
+      fallbackCopy(email, done);
+    }
+  }
+  function fallbackCopy(text, cb) {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+    if (cb) cb();
+  }
   window.saveFooterLinks = function() {
     const links = {
-      google: document.getElementById('set-google').value.trim() || defaultLinks.google,
+      feedbackEmail: document.getElementById('set-feedback-email').value.trim() || defaultLinks.feedbackEmail,
       facebook: document.getElementById('set-facebook').value.trim() || defaultLinks.facebook,
       whatsapp: document.getElementById('set-whatsapp').value.trim() || defaultLinks.whatsapp,
       youtube: document.getElementById('set-youtube').value.trim() || defaultLinks.youtube
@@ -666,7 +776,7 @@
   }
   function populateSettingsInputs() {
     const links = loadFooterLinks();
-    document.getElementById('set-google').value = links.google;
+    document.getElementById('set-feedback-email').value = links.feedbackEmail;
     document.getElementById('set-facebook').value = links.facebook;
     document.getElementById('set-whatsapp').value = links.whatsapp;
     document.getElementById('set-youtube').value = links.youtube;
@@ -893,6 +1003,7 @@
       document.getElementById('loading-screen').classList.add('hidden');
       loadFromFirebase();
       applyFooterLinks();
+      twemojiFix(document.body);
     }, 800);
   });
 
