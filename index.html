@@ -436,6 +436,29 @@
     background-color: rgba(0, 0, 0, 0.7) !important;
     justify-content: center;
     align-items: center;
+}/* --- DARK MODE FIXES FOR CART & BACK BUTTON --- */
+
+/* 1. Force all text, prices, and quantities inside the cart to be white */
+body.dark-mode #cart-panel,
+body.dark-mode .cart-panel,
+body.dark-mode .cart-panel * {
+    color: #ffffff !important;
+}
+
+/* 2. Give the cart panel a proper dark background so it contrasts well */
+body.dark-mode .cart-panel {
+    background-color: #1c273c !important; 
+    border-left: 1px solid #2d3d5a !important;
+}
+
+/* 3. Force the Back Button and navigation icons to show up in white */
+body.dark-mode .back-btn, 
+body.dark-mode .icon-btn,
+body.dark-mode [onclick*="back"],
+body.dark-mode .back-btn *, 
+body.dark-mode .icon-btn * {
+    color: #ffffff !important;
+    fill: #ffffff !important; /* This ensures graphic/SVG icons turn white too */
 }
   </style>
 </head>
