@@ -24,8 +24,6 @@
 
     /* ==============================
        DAY / NIGHT THEME
-       Bright & airy during the day, switches to a dark, easy-on-the-eyes
-       palette automatically at night (can be overridden manually).
        ============================== */
     body.dark-mode {
       --bg-color: #0E1420;
@@ -129,7 +127,7 @@
       border: 1px solid var(--border-color);
       border-radius: 30px;
       background: var(--surface-color);
-      font-size: 16px; /* prevents iOS zoom-in on focus */
+      font-size: 16px;
       color: var(--text-main);
       outline: none;
       box-shadow: 0 4px 10px rgba(0,0,0,0.02);
@@ -378,7 +376,6 @@
       .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
       .cat-img-wrapper { height: 82px; }
     }
-    /* Twemoji images render in place of raw emoji text for consistent cross-device look */
     img.emoji {
       height: 1em; width: 1em; margin: 0 0.03em 0 0.03em; vertical-align: -0.12em;
       display: inline-block;
@@ -386,6 +383,7 @@
     .cat-emoji-icon img.emoji { height: 2.3rem; width: 2.3rem; vertical-align: middle; }
     .hero-emoji-icon img.emoji { height: 1.4rem; width: 1.4rem; vertical-align: -0.2em; }
     .hero-emoji-watermark img.emoji { height: 6rem; width: 6rem; }
+    
     /* ==============================
        FOOTER: REVIEWS & SOCIAL LINKS
        ============================== */
@@ -424,14 +422,11 @@
       .footer-review-card { flex-direction: column; text-align: center; }
       .google-review-btn { width: 100%; justify-content: center; }
     }
-
   </style>
 </head>
 <body>
 
   <script>
-    // Applied immediately (outside the module script) so there's no flash of the
-    // wrong theme while the rest of the page loads.
     (function() {
       function getAutoTheme() {
         var h = new Date().getHours();
@@ -658,7 +653,7 @@
 
   <!-- ==============================
        JAVASCRIPT LOGIC
-       ============================== -->
+       ============================== */ -->
   <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -697,16 +692,12 @@
     applyTheme(next);
     showToast(next === 'dark' ? 'Night mode on' : 'Day mode on');
   }
-  // If the person hasn't manually picked a theme, re-check every few minutes so the
-  // menu switches itself right around sunset / sunrise while it's left open.
   setInterval(() => {
     if (!localStorage.getItem('metroMenuTheme')) applyTheme(getAutoTheme());
   }, 10 * 60 * 1000);
 
   // ==============================
   // REVIEWS & SOCIAL LINKS
-  // Stored locally so the owner can edit them anytime from Admin > Settings
-  // without needing a Firestore schema change.
   // ==============================
   const defaultLinks = {
     feedbackEmail: 'metroguesthouse920@gmail.com',
@@ -729,9 +720,6 @@
     if (w) w.href = 'https://wa.me/' + links.whatsapp.replace(/[^0-9]/g, '');
     if (y) y.href = links.youtube;
   }
-  // Opens a small popup with the feedback email instead of relying purely on a
-  // mailto: link, since many desktop browsers have no default mail app configured
-  // and a bare mailto click can silently do nothing.
   window.openFeedbackModal = function() {
     const links = loadFooterLinks();
     const email = links.feedbackEmail;
@@ -786,46 +774,20 @@
   let orderCounter = 1000;
   const DEFAULT_CAT_COUNT = 23;
 
-  // Fallback images: real, hand-picked Pexels stock photos matched to each category
-  // Emoji icons replace photo banners for a lighter, faster, more "advanced" look
   const defaultEmoji = '🍽️';
   const defaultEmojiMap = {
-    'Pasta': '🍝',
-    'Chinese / Thai': '🍜',
-    'Continental Steaks': '🥩',
-    'Street Foods': '🌭',
-    'Handi': '🍲',
-    'BBQ': '🍢',
-    'Kabuli / Afghani': '🍛',
-    'Rice': '🍚',
-    'Soup': '🥣',
-    'Metro Specialities': '⭐',
-    'BBQ Platters': '🍖',
-    'Pakistani Karahi': '🍛',
-    'Juice Bar': '🧃',
-    'Coffees': '☕',
-    'Ice Cream': '🍦',
-    'Milk Shakes': '🥤',
-    'Desserts': '🍮',
-    'Katakat': '🥘',
-    'Shinwari Karahi': '🍲',
-    'Pizza': '🍕',
-    'Fast Foods': '🍔',
-    'Salads': '🥗',
-    'Tandoori': '🍗'
+    'Pasta': '🍝', 'Chinese / Thai': '🍜', 'Continental Steaks': '🥩', 'Street Foods': '🌭',
+    'Handi': '🍲', 'BBQ': '🍢', 'Kabuli / Afghani': '🍛', 'Rice': '🍚', 'Soup': '🥣',
+    'Metro Specialities': '⭐', 'BBQ Platters': '🍖', 'Pakistani Karahi': '🍛', 'Juice Bar': '🧃',
+    'Coffees': '☕', 'Ice Cream': '🍦', 'Milk Shakes': '🥤', 'Desserts': '🍮', 'Katakat': '🥘',
+    'Shinwari Karahi': '🍲', 'Pizza': '🍕', 'Fast Foods': '🍔', 'Salads': '🥗', 'Tandoori': '🍗'
   };
-  // Rotating gradient palette so every category tile gets a distinct, vivid background
   const gradientPalette = [
-    'linear-gradient(135deg,#FF6B6B,#FFA07A)',
-    'linear-gradient(135deg,#4ECDC4,#2C8C86)',
-    'linear-gradient(135deg,#FFB347,#FF7A18)',
-    'linear-gradient(135deg,#A78BFA,#7C3AED)',
-    'linear-gradient(135deg,#38BDF8,#2563EB)',
-    'linear-gradient(135deg,#F472B6,#DB2777)',
-    'linear-gradient(135deg,#34D399,#059669)',
-    'linear-gradient(135deg,#FBBF24,#D97706)',
-    'linear-gradient(135deg,#F87171,#B91C1C)',
-    'linear-gradient(135deg,#60A5FA,#1D4ED8)'
+    'linear-gradient(135deg,#FF6B6B,#FFA07A)', 'linear-gradient(135deg,#4ECDC4,#2C8C86)',
+    'linear-gradient(135deg,#FFB347,#FF7A18)', 'linear-gradient(135deg,#A78BFA,#7C3AED)',
+    'linear-gradient(135deg,#38BDF8,#2563EB)', 'linear-gradient(135deg,#F472B6,#DB2777)',
+    'linear-gradient(135deg,#34D399,#059669)', 'linear-gradient(135deg,#FBBF24,#D97706)',
+    'linear-gradient(135deg,#F87171,#B91C1C)', 'linear-gradient(135deg,#60A5FA,#1D4ED8)'
   ];
   function hashStr(str) {
     let h = 0;
@@ -838,23 +800,17 @@
   function emojiForCat(cat) {
     return (cat.emoji && cat.emoji.trim()) || defaultEmojiMap[cat.en] || defaultEmoji;
   }
-  // Renders emoji as consistent Twemoji SVG images so icons look the same on every
-  // device/browser instead of falling back to broken "tofu" glyphs on older systems.
   function twemojiFix(el) {
     if (window.twemoji) {
       try {
         window.twemoji.parse(el || document.body, { folder: 'svg', ext: '.svg', className: 'emoji' });
-      } catch (e) { /* ignore if twemoji CDN unavailable, native emoji still shows */ }
+      } catch (e) {}
     }
   }
 
   async function loadFromFirebase() {
     let settled = false;
 
-    // Safety net: if Firebase hangs or never responds (common when this file
-    // is opened directly via file:// instead of a real http/https server),
-    // fall back to the built-in default menu after 6 seconds so the page
-    // never gets stuck on "Connecting...".
     const timeoutId = setTimeout(() => {
       if (settled) return;
       settled = true;
@@ -862,13 +818,15 @@
       setFirebaseStatus(false);
       db = getDefaultData();
       renderCategories();
+      renderAdminItems();
+      renderAdminCats();
     }, 6000);
 
     try {
       const catSnap = await getDocs(collection(firestore, "categories"));
       const itemSnap = await getDocs(collection(firestore, "items"));
 
-      if (settled) return; // timeout already fired, ignore late response
+      if (settled) return;
       settled = true;
       clearTimeout(timeoutId);
 
@@ -879,6 +837,8 @@
 
       setFirebaseStatus(true);
       renderCategories();
+      renderAdminItems();
+      renderAdminCats();
     } catch(e) {
       console.error("Firebase load error:", e);
       if (settled) return;
@@ -887,6 +847,8 @@
       setFirebaseStatus(false);
       db = getDefaultData();
       renderCategories();
+      renderAdminItems();
+      renderAdminCats();
     }
   }
 
@@ -905,12 +867,18 @@
     const existingItems = await getDocs(collection(firestore, "items"));
     for (const d of existingItems.docs) await deleteDoc(doc(firestore, "items", d.id));
 
+    const catIdMap = {};
+
     for (const cat of defaultDb.categories) {
       const { id, ...data } = cat;
-      await addDoc(collection(firestore, "categories"), data);
+      const docRef = await addDoc(collection(firestore, "categories"), data);
+      catIdMap[id] = docRef.id;
     }
     for (const item of defaultDb.items) {
       const { id, ...data } = item;
+      if (catIdMap[data.cat]) {
+        data.cat = catIdMap[data.cat];
+      }
       await addDoc(collection(firestore, "items"), data);
     }
 
@@ -1204,7 +1172,7 @@
     window.open(`https://wa.me/${WHATSAPP_NUM}?text=${encodeURIComponent(wa)}`, '_blank');
   }
 
-  // ADMIN
+  // ADMIN PANEL
   window.openAdminLock = function() {
     document.getElementById('admin-lock-modal').classList.add('show');
     document.getElementById('admin-pin').value = '';
@@ -1226,8 +1194,19 @@
   window.switchTab = function(tabId, btn) {
     document.querySelectorAll('.admin-tab-content').forEach(t => t.style.display = 'none');
     document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).style.display = 'block';
-    btn.classList.add('active');
+    
+    const targetTab = document.getElementById(tabId);
+    if (targetTab) targetTab.style.display = 'block';
+    if (btn) btn.classList.add('active');
+    
+    // Dynamically refresh data when explicitly clicking into active admin sections
+    if (tabId === 'tab-manage-items') {
+      renderAdminItems();
+    } else if (tabId === 'tab-cats') {
+      renderAdminCats();
+    } else if (tabId === 'tab-add-item') {
+      populateAdminCatDropdown();
+    }
   }
 
   function populateAdminCatDropdown() {
@@ -1238,22 +1217,25 @@
 
   function renderAdminItems() {
     const list = document.getElementById('admin-items-list');
+    if (!list) return;
     if (db.items.length === 0) { list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No items yet.</div>'; return; }
     list.innerHTML = db.items.map(item => {
       const cat = db.categories.find(c => c.id === item.cat);
       return `<div class="admin-row">
         <div>
           <div style="font-weight:600; color:var(--text-main);">${item.nameEn}</div>
-          <div style="font-size:0.85rem; color:var(--text-muted);">${cat ? cat.en : item.cat} &bull; Rs. ${Number(item.price).toLocaleString()} &bull; Code: ${item.code}</div>
+          <div style="font-size:0.85rem; color:var(--text-muted);">${cat ? cat.en : 'Uncategorized'} &bull; Rs. ${Number(item.price).toLocaleString()} &bull; Code: ${item.code}</div>
           <div style="direction:rtl; font-family:'Noto Nastaliq Urdu',serif; font-size:0.9rem; color:var(--primary-color);">${item.nameUr}</div>
         </div>
         <button class="admin-del-btn" onclick="adminDeleteItem('${item.id}')">Delete</button>
       </div>`;
     }).join('');
+    twemojiFix(list);
   }
 
   function renderAdminCats() {
     const list = document.getElementById('admin-cats-list');
+    if (!list) return;
     list.innerHTML = db.categories.map(cat => {
       const count = db.items.filter(i => i.cat === cat.id).length;
       const catEmoji = emojiForCat(cat);
@@ -1342,19 +1324,7 @@
     if (!confirm('Firebase data will be deleted and reset. Confirm?')) return;
     document.getElementById('loading-screen').classList.remove('hidden');
     try {
-      const existingCats = await getDocs(collection(firestore, "categories"));
-      for (const d of existingCats.docs) await deleteDoc(doc(firestore, "categories", d.id));
-      const existingItems = await getDocs(collection(firestore, "items"));
-      for (const d of existingItems.docs) await deleteDoc(doc(firestore, "items", d.id));
-      const defaultDb = getDefaultData();
-      for (const cat of defaultDb.categories) {
-        const { id, ...data } = cat;
-        await addDoc(collection(firestore, "categories"), data);
-      }
-      for (const item of defaultDb.items) {
-        const { id, ...data } = item;
-        await addDoc(collection(firestore, "items"), data);
-      }
+      await seedDefaultData();
       setTimeout(() => location.reload(), 1200);
     } catch(e) {
       document.getElementById('loading-screen').classList.add('hidden');
@@ -1364,6 +1334,7 @@
 
   window.showToast = function(msg) {
     const t = document.getElementById('toast');
+    if (!t) return;
     t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
   }
