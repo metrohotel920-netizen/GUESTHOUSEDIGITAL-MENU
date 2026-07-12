@@ -5,21 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Metro Guest House - Digital Menu</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Noto+Nastaliq+Urdu&display=swap" rel="stylesheet">
-/* Force the edit modal to appear on top of the menu */
-#edit-item-modal.show {
-    display: flex !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    z-index: 9999 !important;
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    justify-content: center;
-    align-items: center;
-}
+
   <style>
     /* ==============================
        COLOR SCHEME & VARIABLES
@@ -600,6 +586,24 @@
     </div>
   </div>
 
+  <!-- EDIT ITEM MODAL -->
+  <div id="edit-item-modal" class="modal-overlay">
+    <div class="modal-box" style="max-width: 380px; text-align: left;">
+      <h3 style="text-align: center; margin-bottom: 15px; color: var(--text-main);">Edit Menu Item</h3>
+      <input type="hidden" id="ei-id">
+      <div class="admin-form-group"><label>Name (English)</label><input type="text" id="ei-nameEn"></div>
+      <div class="admin-form-group"><label>Name (Urdu)</label><input type="text" id="ei-nameUr" style="direction:rtl;"></div>
+      <div class="admin-form-group"><label>Category</label><select id="ei-cat"></select></div>
+      <div class="admin-form-group"><label>Price (Rs.)</label><input type="number" id="ei-price"></div>
+      <div class="admin-form-group"><label>Item Code</label><input type="text" id="ei-code"></div>
+      <div style="display: flex; gap: 10px; margin-top: 15px;">
+        <button onclick="document.getElementById('edit-item-modal').classList.remove('show')" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--border-color); color:var(--text-main);">Cancel</button>
+        <button onclick="adminUpdateItem()" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--success); color:white; font-weight:600;">Update Item</button>
+      </div>
+      <div id="ei-msg" style="margin-top:10px; font-weight:600; text-align:center;"></div>
+    </div>
+  </div>
+
   <div id="toast" class="toast">Message</div>
 
   <!-- ADMIN PANEL -->
@@ -671,7 +675,7 @@
   <script src="https://cdn.jsdelivr.net/npm/twemoji@14.0.2/dist/twemoji.min.js" crossorigin="anonymous"></script>
   <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+  import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyAlA-h5T6elkxkr0scBhozXqqaCULmBOzE",
@@ -740,7 +744,7 @@
     document.getElementById('feedback-email-display').textContent = email;
     const subject = encodeURIComponent('Feedback for Metro Guest House');
     const body = encodeURIComponent('Hi Metro Guest House,\n\nHere is my feedback about my visit:\n\n');
-    document.getElementById('feedback-mailto-btn').href = `mailto:${email}?subject=${subject}&body=${body}`;
+    document.getElementById('feedback-mailto-btn').href = `mailto:${email}?subject=${subject}?body=${body}`;
     document.getElementById('feedback-modal').classList.add('show');
   }
   window.copyFeedbackEmail = function() {
@@ -1213,7 +1217,6 @@
     if (targetTab) targetTab.style.display = 'block';
     if (btn) btn.classList.add('active');
     
-    // Dynamically refresh data when explicitly clicking into active admin sections
     if (tabId === 'tab-manage-items') {
       renderAdminItems();
     } else if (tabId === 'tab-cats') {
@@ -1241,10 +1244,63 @@
           <div style="font-size:0.85rem; color:var(--text-muted);">${cat ? cat.en : 'Uncategorized'} &bull; Rs. ${Number(item.price).toLocaleString()} &bull; Code: ${item.code}</div>
           <div style="direction:rtl; font-family:'Noto Nastaliq Urdu',serif; font-size:0.9rem; color:var(--primary-color);">${item.nameUr}</div>
         </div>
-        <button class="admin-del-btn" onclick="adminDeleteItem('${item.id}')">Delete</button>
+        <div style="display:flex; gap:8px; flex-shrink:0;">
+          <button style="background: var(--border-color); color: var(--text-main); border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="openEditItem('${item.id}')">Edit</button>
+          <button class="admin-del-btn" onclick="adminDeleteItem('${item.id}')">Delete</button>
+        </div>
       </div>`;
     }).join('');
     twemojiFix(list);
+  }
+
+  window.openEditItem = function(itemId) {
+    const item = db.items.find(i => i.id === itemId);
+    if (!item) return;
+    document.getElementById('ei-id').value = item.id;
+    document.getElementById('ei-nameEn').value = item.nameEn;
+    document.getElementById('ei-nameUr').value = item.nameUr;
+    
+    const sel = document.getElementById('ei-cat');
+    sel.innerHTML = db.categories.map(c => `<option value="${c.id}">${c.en}</option>`).join('');
+    sel.value = item.cat;
+    
+    document.getElementById('ei-price').value = item.price;
+    document.getElementById('ei-code').value = item.code;
+    document.getElementById('ei-msg').textContent = '';
+    
+    document.getElementById('edit-item-modal').classList.add('show');
+    twemojiFix(document.getElementById('edit-item-modal'));
+  }
+
+  window.adminUpdateItem = async function() {
+    const id = document.getElementById('ei-id').value;
+    const nameEn = document.getElementById('ei-nameEn').value.trim();
+    const nameUr = document.getElementById('ei-nameUr').value.trim();
+    const cat = document.getElementById('ei-cat').value;
+    const price = parseInt(document.getElementById('ei-price').value);
+    const code = document.getElementById('ei-code').value.trim();
+    const msg = document.getElementById('ei-msg');
+
+    if (!nameEn || !nameUr || !cat || !price || !code) {
+      msg.style.color = '#d62828'; msg.textContent = 'Please fill all fields.'; return;
+    }
+
+    msg.style.color = 'var(--text-main)'; msg.textContent = 'Updating...';
+    try {
+      await updateDoc(doc(firestore, "items", id), { nameEn, nameUr, cat, price, code });
+      
+      const idx = db.items.findIndex(i => i.id === id);
+      if (idx !== -1) {
+        db.items[idx] = { id, nameEn, nameUr, cat, price, code };
+      }
+      
+      msg.style.color = 'var(--success)'; msg.textContent = 'Item updated successfully!';
+      setTimeout(() => {
+        document.getElementById('edit-item-modal').classList.remove('show');
+        renderCategories(); 
+        renderAdminItems();
+      }, 1000);
+    } catch(e) { msg.style.color = '#d62828'; msg.textContent = 'Error: ' + e.message; }
   }
 
   function renderAdminCats() {
