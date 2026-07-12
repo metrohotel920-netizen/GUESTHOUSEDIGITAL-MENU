@@ -422,6 +422,21 @@
       .footer-review-card { flex-direction: column; text-align: center; }
       .google-review-btn { width: 100%; justify-content: center; }
     }
+/* Force the edit modal to appear on top of the menu */
+#edit-item-modal.show {
+    display: flex !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    z-index: 9999 !important;
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7) !important;
+    justify-content: center;
+    align-items: center;
+}
   </style>
 </head>
 <body>
