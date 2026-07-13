@@ -594,6 +594,138 @@ document.addEventListener("DOMContentLoaded", function() {
         cards.forEach(card => container.appendChild(card));
     });
 });
+    // ========================================================
+// METRO GUEST HOUSE MENU MASTER AUTOMATION SUITE
+// ========================================================
+(function() {
+    let currentSearchTerm = "";
+
+    // --- 1. INSTANT LIVE SEARCH CONTROLLER (No waiting for full words) ---
+    document.addEventListener('input', function(e) {
+        const searchInput = e.target.closest('input[type="text"], input[type="search"], .search-bar input');
+        if (!searchInput) return;
+
+        currentSearchTerm = searchInput.value.toLowerCase().trim();
+        applyInstantSearch();
+    });
+
+    function applyInstantSearch() {
+        const items = document.querySelectorAll('.menu-item-card, .item-card, [class*="item-card"]');
+        items.forEach(item => {
+            // Safe check to avoid hiding parent structural panels
+            if (item.classList.contains('grid') || item.id === 'main-view') return;
+
+            const text = item.textContent.toLowerCase();
+            // If the item text contains the typed letters, show it instantly; otherwise, hide it
+            if (text.includes(currentSearchTerm)) {
+                item.style.setProperty('display', '', 'important');
+            } else {
+                item.style.setProperty('display', 'none', 'important');
+            }
+        });
+    }
+
+    // --- 2. SETUP GLOBAL QUICK VIEW POPUP OVERLAY ---
+    function initQuickViewModal() {
+        if (document.getElementById('metro-popup-modal')) return;
+
+        const modal = document.createElement('div');
+        modal.id = 'metro-popup-modal';
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:999999; font-family:sans-serif;';
+        
+        const box = document.createElement('div');
+        box.style.cssText = 'background:#16222f; border:2px solid #233347; border-radius:14px; padding:25px; width:90%; max-width:400px; max-height:75vh; overflow-y:auto; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.6);';
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '✕';
+        closeBtn.style.cssText = 'position:absolute; top:12px; right:15px; background:none; border:none; color:#ffffff; font-size:22px; cursor:pointer; font-weight:bold;';
+        closeBtn.onclick = () => modal.style.display = 'none';
+        
+        const contentContainer = document.createElement('div');
+        contentContainer.id = 'metro-popup-content';
+
+        box.appendChild(closeBtn);
+        box.appendChild(contentContainer);
+        modal.appendChild(box);
+        document.body.appendChild(modal);
+
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    }
+
+    // INTERCEPT QUICK VIEW CLICKS
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('[class*="quick"], .quick-view, button');
+        if (!btn || !btn.textContent.toLowerCase().includes('quick view')) return;
+
+        initQuickViewModal();
+        const card = btn.closest('div');
+        if (!card) return;
+
+        setTimeout(() => {
+            const targetList = card.querySelector('div[style*="display: block"], ul, [class*="items"], [class*="expanded"]');
+            if (targetList) {
+                const modal = document.getElementById('metro-popup-modal');
+                const content = document.getElementById('metro-popup-content');
+                
+                content.innerHTML = targetList.innerHTML;
+                content.querySelectorAll('*').forEach(el => el.style.color = '#ffffff');
+                
+                targetList.style.setProperty('display', 'none', 'important');
+                modal.style.display = 'flex';
+            }
+        }, 80);
+    });
+
+    // --- 3. DYNAMIC ITEM SORTING CONTROLLER (.1, .3, .4, .12...) ---
+    function sortItemsByCode() {
+        const itemCards = document.querySelectorAll('.menu-item-card, .item-card, [class*="item-card"]');
+        if (itemCards.length === 0) return;
+
+        const containers = new Set();
+        itemCards.forEach(card => card.parentElement && containers.add(card.parentElement));
+
+        containers.forEach(container => {
+            // Sort items inside each container natively
+            const cards = Array.from(container.children).filter(child => 
+                child.classList.contains('menu-item-card') || 
+                child.classList.contains('item-card') || 
+                child.className.includes('item-card')
+            );
+
+            if (cards.length <= 1) return;
+
+            // Check if ordering is already correct to prevent infinite looping strings
+            let needsSort = false;
+            for (let i = 0; i < cards.length - 1; i++) {
+                const matchCurr = cards[i].textContent.match(/Code:\s*\.?(\d+)/i);
+                const matchNext = cards[i+1].textContent.match(/Code:\s*\.?(\d+)/i);
+                const numCurr = matchCurr ? parseInt(matchCurr[1], 10) : 0;
+                const numNext = matchNext ? parseInt(matchNext[1], 10) : 0;
+                if (numCurr > numNext) { needsSort = true; break; }
+            }
+
+            if (!needsSort) return;
+
+            cards.sort((a, b) => {
+                const matchA = a.textContent.match(/Code:\s*\.?(\d+)/i);
+                const matchB = b.textContent.match(/Code:\s*\.?(\d+)/i);
+                const numA = matchA ? parseInt(matchA[1], 10) : 0;
+                const numB = matchB ? parseInt(matchB[1], 10) : 0;
+                return numA - numB;
+            });
+
+            cards.forEach(card => container.appendChild(card));
+        });
+
+        // Re-apply search filters automatically if the user is actively typing during a database refresh
+        if (currentSearchTerm !== "") {
+            applyInstantSearch();
+        }
+    }
+
+    // Run background check loop every 400ms to maintain structure and search states seamlessly
+    setInterval(sortItemsByCode, 400);
+})();
   </script>
 
   <!-- Loading Screen -->
