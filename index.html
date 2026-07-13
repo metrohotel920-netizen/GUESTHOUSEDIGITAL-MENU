@@ -142,6 +142,29 @@
       left: 16px; top: 50%; transform: translateY(-50%);
       color: var(--text-muted);
     }
+    .search-btn {
+      position: absolute;
+      right: 6px; top: 50%; transform: translateY(-50%);
+      background: var(--primary-color); color: #fff; border: none;
+      width: 36px; height: 36px; border-radius: 50%; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; font-size: 1rem;
+    }
+    .search-dropdown {
+      position: absolute;
+      top: calc(100% + 8px); left: 0; right: 0;
+      background: var(--surface-color); border: 1px solid var(--border-color);
+      border-radius: 14px; box-shadow: var(--shadow);
+      max-height: 60vh; overflow-y: auto; z-index: 50;
+      display: none;
+    }
+    .search-dropdown.show { display: block; }
+    .search-dropdown-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 16px; border-bottom: 1px solid var(--border-color);
+      font-weight: 600; color: var(--text-main); font-size: 0.95rem;
+    }
+    .search-dropdown-close { background: none; border: none; color: var(--text-muted); font-size: 1.2rem; cursor: pointer; line-height: 1; }
+    .search-dropdown-list { padding: 8px; }
 
     .section-title {
       text-align: center; font-size: 1.05rem; font-weight: 600; color: var(--text-main);
@@ -448,37 +471,6 @@ body.dark-mode #floating-cart *,
 body.dark-mode .floating-cart * {
     color: #ffffff !important; /* Forces "1 Items" and "View Cart" to be bright white */
 }
-    /* --- QUICK VIEW POPUP MODAL FIX --- */
-
-/* Target the expanded items panel inside the card and turn it into a popup */
-.category-card, .card {
-    position: relative; /* Keeps layout stable */
-}
-
-/* This intercepts the dropdown expansion and turns it into a small centered modal instead */
-.category-card [style*="display: block"], 
-.category-card div[id*="quick"],
-.category-card .expanded-items {
-    position: fixed !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    width: 90% !important;
-    max-width: 400px !important; /* Keeps it small */
-    max-height: 70vh !important;
-    overflow-y: auto !important;
-    background-color: #1a2436 !important; /* Clean dark mode background */
-    border: 2px solid #2d3d5a !important;
-    border-radius: 12px !important;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
-    padding: 20px !important;
-    z-index: 10000 !important; /* Sits completely on top */
-}
-
-/* Style adjustments for items inside the new small popup view */
-body.dark-mode .category-card [style*="display: block"] * {
-    color: #ffffff !important;
-}
   </style>
 </head>
 <body>
@@ -493,239 +485,6 @@ body.dark-mode .category-card [style*="display: block"] * {
       var theme = saved || getAutoTheme();
       if (theme === 'dark') document.body.classList.add('dark-mode');
     })();
-    // --- AUTOMATIC LIVE SEARCH FIX ---
-document.addEventListener("DOMContentLoaded", function() {
-    // Automatically finds your search input box
-    const searchBox = document.querySelector('input[type="text"], input[type="search"], .search-bar input');
-    
-    if (searchBox) {
-        // Triggers instantly on every single letter typed
-        searchBox.addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase().trim();
-            const menuItems = document.querySelectorAll('.menu-item-card, .item-card, [class*="item"]');
-
-            menuItems.forEach(item => {
-                const itemName = item.textContent.toLowerCase();
-                // Matches partial words automatically
-                if (itemName.includes(keyword)) {
-                    item.style.display = ''; // Shows item
-                } else {
-                    item.style.display = 'none'; // Hides item
-                }
-            });
-        });
-    }
-});
-    // ========================================================
-// METRO GUEST HOUSE MENU AUTOMATION SUITE
-// ========================================================
-document.addEventListener("DOMContentLoaded", function() {
-
-    // 1. AUTOMATIC LIVE SEARCH (Partial Word Matching)
-    const searchInput = document.querySelector('input');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const keyword = e.target.value.toLowerCase().trim();
-            // Targets item cards or category items dynamically
-            const items = document.querySelectorAll('.menu-item-card, [class*="card"], [class*="item"]');
-            
-            items.forEach(item => {
-                // Skip parental container wrappers so we don't hide the whole screen
-                if (item.classList.contains('grid') || item.id === 'main-view') return;
-                
-                const text = item.textContent.toLowerCase();
-                item.style.display = text.includes(keyword) ? '' : 'none';
-            });
-        });
-    }
-
-    // 2. QUICK VIEW POPUP TRANSFORMATION
-    // Intercepts the inline dropdown expansion and forces it into a centered modal window
-    document.addEventListener('click', function(e) {
-        const quickViewBtn = e.target.closest('[class*="quick"], .quick-view, button');
-        if (!quickViewBtn || !quickViewBtn.textContent.toLowerCase().includes('quick view')) return;
-
-        // Give the menu a split second to toggle the layout container open
-        setTimeout(() => {
-            const parentCard = quickViewBtn.closest('div');
-            if (!parentCard) return;
-
-            // Find the container holding the items that just expanded inside the card
-            const expandedList = parentCard.querySelector('div[style*="display: block"], ul, [class*="items"]');
-            if (expandedList) {
-                // Apply instant floating window styling directly to it
-                Object.assign(expandedList.style, {
-                    position: 'fixed',
-                    top: '50%',
-                    left: '50%',
-                    transform: 'translate(-50%, -50%)',
-                    width: '90%',
-                    maxWidth: '420px',
-                    maxHeight: '75vh',
-                    overflowY: 'auto',
-                    backgroundColor: '#16222f',
-                    border: '3px solid #233347',
-                    borderRadius: '16px',
-                    boxShadow: '0 20px 50px rgba(0, 0, 0, 0.7)',
-                    padding: '24px',
-                    zIndex: '999999'
-                });
-
-                // Ensure all text inside the new popup is cleanly readable in white
-                expandedList.querySelectorAll('*').forEach(el => el.style.color = '#ffffff');
-            }
-        }, 50);
-    });
-
-    // 3. AUTOMATIC SEQUENTIAL ORDERING BY CODE (.1, .3, .4, .12...)
-    const itemCards = document.querySelectorAll('.menu-item-card, [class*="item-card"]');
-    const containers = new Set();
-    itemCards.forEach(card => card.parentElement && containers.add(card.parentElement));
-
-    containers.forEach(container => {
-        const cards = Array.from(container.children);
-        cards.sort((a, b) => {
-            const matchA = a.textContent.match(/Code:\s*\.?(\d+)/i);
-            const matchB = b.textContent.match(/Code:\s*\.?(\d+)/i);
-            const numA = matchA ? parseInt(matchA[1], 10) : 0;
-            const numB = matchB ? parseInt(matchB[1], 10) : 0;
-            return numA - numB;
-        });
-        cards.forEach(card => container.appendChild(card));
-    });
-});
-    // ========================================================
-// METRO GUEST HOUSE MENU MASTER AUTOMATION SUITE
-// ========================================================
-(function() {
-    let currentSearchTerm = "";
-
-    // --- 1. INSTANT LIVE SEARCH CONTROLLER (No waiting for full words) ---
-    document.addEventListener('input', function(e) {
-        const searchInput = e.target.closest('input[type="text"], input[type="search"], .search-bar input');
-        if (!searchInput) return;
-
-        currentSearchTerm = searchInput.value.toLowerCase().trim();
-        applyInstantSearch();
-    });
-
-    function applyInstantSearch() {
-        const items = document.querySelectorAll('.menu-item-card, .item-card, [class*="item-card"]');
-        items.forEach(item => {
-            // Safe check to avoid hiding parent structural panels
-            if (item.classList.contains('grid') || item.id === 'main-view') return;
-
-            const text = item.textContent.toLowerCase();
-            // If the item text contains the typed letters, show it instantly; otherwise, hide it
-            if (text.includes(currentSearchTerm)) {
-                item.style.setProperty('display', '', 'important');
-            } else {
-                item.style.setProperty('display', 'none', 'important');
-            }
-        });
-    }
-
-    // --- 2. SETUP GLOBAL QUICK VIEW POPUP OVERLAY ---
-    function initQuickViewModal() {
-        if (document.getElementById('metro-popup-modal')) return;
-
-        const modal = document.createElement('div');
-        modal.id = 'metro-popup-modal';
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:none; justify-content:center; align-items:center; z-index:999999; font-family:sans-serif;';
-        
-        const box = document.createElement('div');
-        box.style.cssText = 'background:#16222f; border:2px solid #233347; border-radius:14px; padding:25px; width:90%; max-width:400px; max-height:75vh; overflow-y:auto; position:relative; box-shadow:0 20px 50px rgba(0,0,0,0.6);';
-        
-        const closeBtn = document.createElement('button');
-        closeBtn.innerHTML = '✕';
-        closeBtn.style.cssText = 'position:absolute; top:12px; right:15px; background:none; border:none; color:#ffffff; font-size:22px; cursor:pointer; font-weight:bold;';
-        closeBtn.onclick = () => modal.style.display = 'none';
-        
-        const contentContainer = document.createElement('div');
-        contentContainer.id = 'metro-popup-content';
-
-        box.appendChild(closeBtn);
-        box.appendChild(contentContainer);
-        modal.appendChild(box);
-        document.body.appendChild(modal);
-
-        modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
-    }
-
-    // INTERCEPT QUICK VIEW CLICKS
-    document.addEventListener('click', function(e) {
-        const btn = e.target.closest('[class*="quick"], .quick-view, button');
-        if (!btn || !btn.textContent.toLowerCase().includes('quick view')) return;
-
-        initQuickViewModal();
-        const card = btn.closest('div');
-        if (!card) return;
-
-        setTimeout(() => {
-            const targetList = card.querySelector('div[style*="display: block"], ul, [class*="items"], [class*="expanded"]');
-            if (targetList) {
-                const modal = document.getElementById('metro-popup-modal');
-                const content = document.getElementById('metro-popup-content');
-                
-                content.innerHTML = targetList.innerHTML;
-                content.querySelectorAll('*').forEach(el => el.style.color = '#ffffff');
-                
-                targetList.style.setProperty('display', 'none', 'important');
-                modal.style.display = 'flex';
-            }
-        }, 80);
-    });
-
-    // --- 3. DYNAMIC ITEM SORTING CONTROLLER (.1, .3, .4, .12...) ---
-    function sortItemsByCode() {
-        const itemCards = document.querySelectorAll('.menu-item-card, .item-card, [class*="item-card"]');
-        if (itemCards.length === 0) return;
-
-        const containers = new Set();
-        itemCards.forEach(card => card.parentElement && containers.add(card.parentElement));
-
-        containers.forEach(container => {
-            // Sort items inside each container natively
-            const cards = Array.from(container.children).filter(child => 
-                child.classList.contains('menu-item-card') || 
-                child.classList.contains('item-card') || 
-                child.className.includes('item-card')
-            );
-
-            if (cards.length <= 1) return;
-
-            // Check if ordering is already correct to prevent infinite looping strings
-            let needsSort = false;
-            for (let i = 0; i < cards.length - 1; i++) {
-                const matchCurr = cards[i].textContent.match(/Code:\s*\.?(\d+)/i);
-                const matchNext = cards[i+1].textContent.match(/Code:\s*\.?(\d+)/i);
-                const numCurr = matchCurr ? parseInt(matchCurr[1], 10) : 0;
-                const numNext = matchNext ? parseInt(matchNext[1], 10) : 0;
-                if (numCurr > numNext) { needsSort = true; break; }
-            }
-
-            if (!needsSort) return;
-
-            cards.sort((a, b) => {
-                const matchA = a.textContent.match(/Code:\s*\.?(\d+)/i);
-                const matchB = b.textContent.match(/Code:\s*\.?(\d+)/i);
-                const numA = matchA ? parseInt(matchA[1], 10) : 0;
-                const numB = matchB ? parseInt(matchB[1], 10) : 0;
-                return numA - numB;
-            });
-
-            cards.forEach(card => container.appendChild(card));
-        });
-
-        // Re-apply search filters automatically if the user is actively typing during a database refresh
-        if (currentSearchTerm !== "") {
-            applyInstantSearch();
-        }
-    }
-
-    // Run background check loop every 400ms to maintain structure and search states seamlessly
-    setInterval(sortItemsByCode, 400);
-})();
   </script>
 
   <!-- Loading Screen -->
@@ -759,7 +518,15 @@ document.addEventListener("DOMContentLoaded", function() {
     <div class="search-container">
       <div class="search-input-wrapper">
         <span class="search-icon">🔍</span>
-        <input type="text" id="search-input" placeholder="Search dishes, codes, تلاش کریں..." oninput="handleSearch(this.value)">
+        <input type="text" id="search-input" placeholder="Search dishes, codes, تلاش کریں..." onkeydown="if(event.key==='Enter'){ event.preventDefault(); executeSearch(); }">
+        <button type="button" class="search-btn" onclick="executeSearch()" aria-label="Search">🔍</button>
+        <div id="search-dropdown" class="search-dropdown">
+          <div class="search-dropdown-header">
+            <span>Search Results (<span id="search-count">0</span>)</span>
+            <button type="button" class="search-dropdown-close" onclick="closeSearchDropdown()">&times;</button>
+          </div>
+          <div id="search-results-list" class="search-dropdown-list"></div>
+        </div>
       </div>
     </div>
     <div class="section-title">Explore Our Menu</div>
@@ -788,15 +555,6 @@ document.addEventListener("DOMContentLoaded", function() {
         </a>
       </div>
     </div>
-  </div>
-
-  <!-- SEARCH VIEW -->
-  <div id="search-view" style="display: none;">
-    <div style="padding: 16px; display: flex; align-items: center; gap: 12px;">
-      <button onclick="goBack()" style="background:none; border:none; font-size:1.5rem; cursor:pointer; color:var(--text-main);">←</button>
-      <div style="font-size: 1.1rem; font-weight: 600; color:var(--text-main);">Search Results (<span id="search-count"></span>)</div>
-    </div>
-    <div id="search-results-list" class="items-container"></div>
   </div>
 
   <!-- ITEMS VIEW -->
@@ -891,6 +649,21 @@ document.addEventListener("DOMContentLoaded", function() {
         <button onclick="adminUpdateItem()" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--success); color:white; font-weight:600;">Update Item</button>
       </div>
       <div id="ei-msg" style="margin-top:10px; font-weight:600; text-align:center;"></div>
+    </div>
+  </div>
+
+  <!-- QUICK VIEW MODAL -->
+  <div id="quick-view-modal" class="modal-overlay" onclick="if(event.target===this) closeQuickView()">
+    <div class="modal-box" style="max-width: 380px; text-align: left;">
+      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;">
+        <div>
+          <h3 id="quick-view-title" style="margin-bottom:2px;">Category</h3>
+          <div id="quick-view-urdu" style="font-family:'Noto Nastaliq Urdu',serif; font-size:0.95rem; color:var(--primary-color);"></div>
+        </div>
+        <button onclick="closeQuickView()" style="background:none; border:none; font-size:1.3rem; line-height:1; cursor:pointer; color:var(--text-muted);">&times;</button>
+      </div>
+      <div id="quick-view-items" style="max-height:50vh; overflow-y:auto;"></div>
+      <button id="quick-view-full-btn" class="view-full-btn" style="margin-top:14px;">View Full Category</button>
     </div>
   </div>
 
@@ -1298,7 +1071,7 @@ document.addEventListener("DOMContentLoaded", function() {
       const catGradient = gradientForCat(cat);
 
       return `
-      <div class="category-card" onclick="toggleCategory(this, '${cat.id}')" style="animation:fade-up 0.4s ease ${i*0.03}s both;">
+      <div class="category-card" onclick="openQuickView('${cat.id}')" style="animation:fade-up 0.4s ease ${i*0.03}s both;">
         <div class="cat-img-wrapper" onclick="event.stopPropagation(); openCategory('${cat.id}')">
            <div class="cat-emoji-tile" style="background:${catGradient};"><span class="cat-emoji-icon">${catEmoji}</span></div>
         </div>
@@ -1306,20 +1079,37 @@ document.addEventListener("DOMContentLoaded", function() {
           <div class="category-card-title">${cat.en}</div>
           <div class="category-card-urdu">${cat.ur}</div>
           <div class="expand-arrow">&#9660; Quick View (${catItems.length})</div>
-          <div class="category-items-preview">
-            ${previewItems}
-            <button class="view-full-btn" onclick="event.stopPropagation(); openCategory('${cat.id}')">View Full Category</button>
-          </div>
         </div>
       </div>`;
     }).join('');
     twemojiFix(grid);
   }
 
-  window.toggleCategory = function(card, catId) {
-    const allCards = document.querySelectorAll('.category-card');
-    allCards.forEach(c => { if (c !== card) c.classList.remove('expanded'); });
-    card.classList.toggle('expanded');
+  // Quick View now opens a small popup modal instead of expanding the card
+  // inline, so the main menu layout is never disturbed.
+  window.openQuickView = function(catId) {
+    const cat = db.categories.find(c => c.id === catId);
+    if (!cat) return;
+    const catItems = db.items.filter(item => item.cat === catId);
+    const previewItems = catItems.map(item => `
+      <div class="preview-item">
+        <span class="preview-item-name">${item.nameEn}</span>
+        <span class="preview-item-price">Rs. ${Number(item.price).toLocaleString()}</span>
+        <button class="preview-add-btn" onclick="event.stopPropagation(); addToCart('${item.id}')">+</button>
+      </div>`).join('');
+
+    document.getElementById('quick-view-title').textContent = cat.en;
+    document.getElementById('quick-view-urdu').textContent = cat.ur;
+    document.getElementById('quick-view-items').innerHTML = previewItems || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No items in this category yet.</div>';
+    document.getElementById('quick-view-full-btn').setAttribute('onclick', `closeQuickView(); openCategory('${catId}')`);
+
+    const modal = document.getElementById('quick-view-modal');
+    modal.classList.add('show');
+    twemojiFix(modal);
+  }
+
+  window.closeQuickView = function() {
+    document.getElementById('quick-view-modal').classList.remove('show');
   }
 
   window.openCategory = function(catId) {
@@ -1338,16 +1128,14 @@ document.addEventListener("DOMContentLoaded", function() {
     const items = db.items.filter(i => i.cat === catId);
     document.getElementById('items-list').innerHTML = renderItemCards(items);
     document.getElementById('main-view').style.display = 'none';
-    document.getElementById('search-view').style.display = 'none';
     document.getElementById('items-view').style.display = 'block';
+    closeSearchDropdown();
     window.scrollTo(0,0);
   }
 
   window.goBack = function() {
     document.getElementById('items-view').style.display = 'none';
-    document.getElementById('search-view').style.display = 'none';
     document.getElementById('main-view').style.display = 'block';
-    document.getElementById('search-input').value = '';
     window.scrollTo(0,0);
   }
 
@@ -1377,24 +1165,38 @@ document.addEventListener("DOMContentLoaded", function() {
     }).join('');
   }
 
-  let searchTimeout;
-  window.handleSearch = function(val) {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      const q = val.trim().toLowerCase();
-      if (!q) { goBack(); return; }
-      document.getElementById('main-view').style.display = 'none';
-      document.getElementById('items-view').style.display = 'none';
-      document.getElementById('search-view').style.display = 'block';
-      const results = db.items.filter(item =>
-        item.nameEn.toLowerCase().includes(q) || item.nameUr.includes(val) || item.code.includes(q)
-      );
-      document.getElementById('search-count').textContent = results.length;
-      document.getElementById('search-results-list').innerHTML = results.length
-        ? renderItemCards(results)
-        : `<div style="text-align:center; padding:40px; color:var(--text-muted);">No items found matching your search.</div>`;
-    }, 200);
+  // Search only runs when the user presses the search button or hits Enter
+  // (not on every keystroke), and results appear in a dropdown under the
+  // search bar instead of replacing the main page content.
+  window.executeSearch = function() {
+    const inputEl = document.getElementById('search-input');
+    const val = inputEl.value;
+    const q = val.trim().toLowerCase();
+    const dropdown = document.getElementById('search-dropdown');
+
+    if (!q) { closeSearchDropdown(); return; }
+
+    const results = db.items.filter(item =>
+      item.nameEn.toLowerCase().includes(q) || item.nameUr.includes(val) || item.code.includes(q)
+    );
+    document.getElementById('search-count').textContent = results.length;
+    document.getElementById('search-results-list').innerHTML = results.length
+      ? renderItemCards(results)
+      : `<div style="text-align:center; padding:40px; color:var(--text-muted);">No items found matching your search.</div>`;
+    dropdown.classList.add('show');
+    twemojiFix(dropdown);
   }
+
+  window.closeSearchDropdown = function() {
+    document.getElementById('search-dropdown').classList.remove('show');
+  }
+
+  // Close the dropdown when clicking anywhere outside of it
+  document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('search-input') && document.getElementById('search-input').closest('.search-input-wrapper');
+    if (!wrapper) return;
+    if (!wrapper.contains(e.target)) closeSearchDropdown();
+  });
 
   window.addToCart = function(itemId) {
     const item = db.items.find(i => i.id === itemId);
@@ -1414,9 +1216,10 @@ document.addEventListener("DOMContentLoaded", function() {
   }
 
   function refreshCurrentView() {
-    if (document.getElementById('search-view').style.display === 'block') {
-      handleSearch(document.getElementById('search-input').value);
-    } else if (document.getElementById('items-view').style.display === 'block') {
+    if (document.getElementById('search-dropdown').classList.contains('show')) {
+      executeSearch();
+    }
+    if (document.getElementById('items-view').style.display === 'block') {
       const catTitle = document.getElementById('cat-hero-title').textContent;
       const cat = db.categories.find(c => c.en === catTitle);
       if (cat) document.getElementById('items-list').innerHTML = renderItemCards(db.items.filter(i => i.cat === cat.id));
@@ -1522,11 +1325,20 @@ document.addEventListener("DOMContentLoaded", function() {
       db.categories.map(c => `<option value="${c.id}">${c.en}</option>`).join('');
   }
 
+  function getItemCodeSortValue(code) {
+    // Extracts the numeric portion of a code like "101", ".1", "1.2" etc. for correct
+    // numeric ordering (.1, .2, .3 ... .10, .11) instead of alphabetical string ordering.
+    const str = String(code == null ? '' : code);
+    const match = str.match(/(\d+(?:\.\d+)?)/);
+    return match ? parseFloat(match[1]) : Number.MAX_SAFE_INTEGER;
+  }
+
   function renderAdminItems() {
     const list = document.getElementById('admin-items-list');
     if (!list) return;
     if (db.items.length === 0) { list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding:20px;">No items yet.</div>'; return; }
-    list.innerHTML = db.items.map(item => {
+    const sortedItems = [...db.items].sort((a, b) => getItemCodeSortValue(a.code) - getItemCodeSortValue(b.code));
+    list.innerHTML = sortedItems.map(item => {
       const cat = db.categories.find(c => c.id === item.cat);
       return `<div class="admin-row">
         <div>
