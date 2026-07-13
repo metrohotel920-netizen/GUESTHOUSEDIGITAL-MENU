@@ -448,6 +448,37 @@ body.dark-mode #floating-cart *,
 body.dark-mode .floating-cart * {
     color: #ffffff !important; /* Forces "1 Items" and "View Cart" to be bright white */
 }
+    /* --- QUICK VIEW POPUP MODAL FIX --- */
+
+/* Target the expanded items panel inside the card and turn it into a popup */
+.category-card, .card {
+    position: relative; /* Keeps layout stable */
+}
+
+/* This intercepts the dropdown expansion and turns it into a small centered modal instead */
+.category-card [style*="display: block"], 
+.category-card div[id*="quick"],
+.category-card .expanded-items {
+    position: fixed !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+    width: 90% !important;
+    max-width: 400px !important; /* Keeps it small */
+    max-height: 70vh !important;
+    overflow-y: auto !important;
+    background-color: #1a2436 !important; /* Clean dark mode background */
+    border: 2px solid #2d3d5a !important;
+    border-radius: 12px !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+    padding: 20px !important;
+    z-index: 10000 !important; /* Sits completely on top */
+}
+
+/* Style adjustments for items inside the new small popup view */
+body.dark-mode .category-card [style*="display: block"] * {
+    color: #ffffff !important;
+}
   </style>
 </head>
 <body>
@@ -462,6 +493,29 @@ body.dark-mode .floating-cart * {
       var theme = saved || getAutoTheme();
       if (theme === 'dark') document.body.classList.add('dark-mode');
     })();
+    // --- AUTOMATIC LIVE SEARCH FIX ---
+document.addEventListener("DOMContentLoaded", function() {
+    // Automatically finds your search input box
+    const searchBox = document.querySelector('input[type="text"], input[type="search"], .search-bar input');
+    
+    if (searchBox) {
+        // Triggers instantly on every single letter typed
+        searchBox.addEventListener('input', function(e) {
+            const keyword = e.target.value.toLowerCase().trim();
+            const menuItems = document.querySelectorAll('.menu-item-card, .item-card, [class*="item"]');
+
+            menuItems.forEach(item => {
+                const itemName = item.textContent.toLowerCase();
+                // Matches partial words automatically
+                if (itemName.includes(keyword)) {
+                    item.style.display = ''; // Shows item
+                } else {
+                    item.style.display = 'none'; // Hides item
+                }
+            });
+        });
+    }
+});
   </script>
 
   <!-- Loading Screen -->
