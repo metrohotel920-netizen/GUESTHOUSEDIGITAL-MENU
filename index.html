@@ -282,6 +282,7 @@
     .item-name { font-size: 1rem; font-weight: 600; color: var(--text-main); }
     .item-urdu { font-family: 'Noto Nastaliq Urdu', serif; font-size: 1rem; color: var(--text-muted); margin-top: 4px; direction: rtl; text-align: right; }
     .item-price { font-size: 1rem; font-weight: 700; color: var(--primary-color); margin-top: 8px; display: inline-block; }
+    .item-desc { font-size: 0.8rem; color: var(--text-muted); margin-top: 5px; line-height: 1.4; white-space: pre-line; }
     .item-code { font-size: 0.7rem; background: var(--bg-color); padding: 2px 7px; border-radius: 4px; color: var(--text-muted); margin-left: 8px; }
 
     .add-btn {
@@ -644,6 +645,7 @@ body.dark-mode .floating-cart * {
       <div class="admin-form-group"><label>Category</label><select id="ei-cat"></select></div>
       <div class="admin-form-group"><label>Price (Rs.)</label><input type="number" id="ei-price"></div>
       <div class="admin-form-group"><label>Item Code</label><input type="text" id="ei-code"></div>
+      <div class="admin-form-group"><label>Description (optional) — sizes, deals, etc.</label><textarea id="ei-desc" rows="3" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); font-family:inherit; resize:vertical;" placeholder="e.g. Small Rs.650 | Medium Rs.850 | Large Rs.1050 | X-Large Rs.1350"></textarea></div>
       <div style="display: flex; gap: 10px; margin-top: 15px;">
         <button onclick="document.getElementById('edit-item-modal').classList.remove('show')" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--border-color); color:var(--text-main);">Cancel</button>
         <button onclick="adminUpdateItem()" style="flex:1; padding:12px; border:none; border-radius:6px; cursor:pointer; background:var(--success); color:white; font-weight:600;">Update Item</button>
@@ -689,6 +691,7 @@ body.dark-mode .floating-cart * {
       <div class="admin-form-group"><label>Category</label><select id="ai-cat"></select></div>
       <div class="admin-form-group"><label>Price (Rs.)</label><input type="number" id="ai-price"></div>
       <div class="admin-form-group"><label>Item Code</label><input type="text" id="ai-code"></div>
+      <div class="admin-form-group"><label>Description (optional) — sizes, deals, etc.</label><textarea id="ai-desc" rows="3" style="width:100%; padding:10px; border-radius:6px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-main); font-family:inherit; resize:vertical;" placeholder="e.g. Small Rs.650 | Medium Rs.850 | Large Rs.1050 | X-Large Rs.1350"></textarea></div>
       <button class="admin-btn" onclick="adminAddItem()">Save Item</button>
       <div id="ai-msg" style="margin-top:10px; font-weight:600; text-align:center;"></div>
     </div>
@@ -1035,8 +1038,8 @@ body.dark-mode .floating-cart * {
         { id:'i36', nameEn:'Mutton Katakat',              nameUr:'مٹن کٹا کٹ',                  cat:'cat18', price:1100, code:'1802' },
         { id:'i37', nameEn:'Shinwari Karahi Half',       nameUr:'شنواری کڑاہی ہاف',           cat:'cat19', price:1850, code:'1901' },
         { id:'i38', nameEn:'Shinwari Karahi Full',       nameUr:'شنواری کڑاہی فل',            cat:'cat19', price:3450, code:'1902' },
-        { id:'i39', nameEn:'Chicken Tikka Pizza (Reg.)', nameUr:'چکن ٹکہ پیزا (ریگولر)',     cat:'cat20', price:950,  code:'2001' },
-        { id:'i40', nameEn:'Cheese Lovers Pizza (Reg.)', nameUr:'چیز لورز پیزا (ریگولر)',    cat:'cat20', price:850,  code:'2002' },
+        { id:'i39', nameEn:'Chicken Tikka Pizza (Reg.)', nameUr:'چکن ٹکہ پیزا (ریگولر)',     cat:'cat20', price:950,  code:'2001', desc:'Small Rs.650 | Medium Rs.950 | Large Rs.1250 | X-Large Rs.1550' },
+        { id:'i40', nameEn:'Cheese Lovers Pizza (Reg.)', nameUr:'چیز لورز پیزا (ریگولر)',    cat:'cat20', price:850,  code:'2002', desc:'Small Rs.600 | Medium Rs.850 | Large Rs.1150 | X-Large Rs.1450\nDeal: Buy any 2 Large Pizzas + 1.5L Drink for Rs.2199' },
         { id:'i41', nameEn:'Cheese Burger',              nameUr:'چیز برگر',                    cat:'cat21', price:550,  code:'2101' },
         { id:'i42', nameEn:'Chicken Fries',               nameUr:'چکن فرائز',                   cat:'cat21', price:450,  code:'2102' },
         { id:'i43', nameEn:'Garden Salad',                nameUr:'گارڈن سلاد',                  cat:'cat22', price:350,  code:'2201' },
@@ -1149,6 +1152,7 @@ body.dark-mode .floating-cart * {
         <div class="item-info">
           <div class="item-name">${item.nameEn} <span class="item-code">#${item.code}</span></div>
           <div class="item-urdu">${item.nameUr}</div>
+          ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
           <span class="item-price">Rs. ${Number(item.price).toLocaleString()}</span>
         </div>
         <div>
@@ -1376,6 +1380,7 @@ body.dark-mode .floating-cart * {
           <div style="font-weight:600; color:var(--text-main);">${item.nameEn}</div>
           <div style="font-size:0.85rem; color:var(--text-muted);">${cat ? cat.en : 'Uncategorized'} &bull; Rs. ${Number(item.price).toLocaleString()} &bull; Code: ${item.code}</div>
           <div style="direction:rtl; font-family:'Noto Nastaliq Urdu',serif; font-size:0.9rem; color:var(--primary-color);">${item.nameUr}</div>
+          ${item.desc ? `<div style="font-size:0.8rem; color:var(--text-muted); margin-top:3px; white-space:pre-line;">${item.desc}</div>` : ''}
         </div>
         <div style="display:flex; gap:8px; flex-shrink:0;">
           <button style="background: var(--border-color); color: var(--text-main); border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-weight: bold;" onclick="openEditItem('${item.id}')">Edit</button>
@@ -1399,6 +1404,7 @@ body.dark-mode .floating-cart * {
     
     document.getElementById('ei-price').value = item.price;
     document.getElementById('ei-code').value = item.code;
+    document.getElementById('ei-desc').value = item.desc || '';
     document.getElementById('ei-msg').textContent = '';
     
     document.getElementById('edit-item-modal').classList.add('show');
@@ -1412,6 +1418,7 @@ body.dark-mode .floating-cart * {
     const cat = document.getElementById('ei-cat').value;
     const price = parseInt(document.getElementById('ei-price').value);
     const code = document.getElementById('ei-code').value.trim();
+    const desc = document.getElementById('ei-desc').value.trim();
     const msg = document.getElementById('ei-msg');
 
     if (!nameEn || !nameUr || !cat || !price || !code) {
@@ -1420,11 +1427,11 @@ body.dark-mode .floating-cart * {
 
     msg.style.color = 'var(--text-main)'; msg.textContent = 'Updating...';
     try {
-      await updateDoc(doc(firestore, "items", id), { nameEn, nameUr, cat, price, code });
+      await updateDoc(doc(firestore, "items", id), { nameEn, nameUr, cat, price, code, desc });
       
       const idx = db.items.findIndex(i => i.id === id);
       if (idx !== -1) {
-        db.items[idx] = { id, nameEn, nameUr, cat, price, code };
+        db.items[idx] = { id, nameEn, nameUr, cat, price, code, desc };
       }
       
       msg.style.color = 'var(--success)'; msg.textContent = 'Item updated successfully!';
@@ -1473,15 +1480,16 @@ body.dark-mode .floating-cart * {
     const cat = document.getElementById('ai-cat').value;
     const price = parseInt(document.getElementById('ai-price').value);
     const code = document.getElementById('ai-code').value.trim();
+    const desc = document.getElementById('ai-desc').value.trim();
     const msg = document.getElementById('ai-msg');
     if (!nameEn || !nameUr || !cat || !price || !code) {
       msg.style.color = '#d62828'; msg.textContent = 'Please fill all fields.'; return;
     }
     msg.style.color = 'var(--text-main)'; msg.textContent = 'Saving...';
     try {
-      const docRef = await addDoc(collection(firestore, "items"), { nameEn, nameUr, cat, price, code });
-      db.items.push({ id: docRef.id, nameEn, nameUr, cat, price, code });
-      ['ai-nameEn','ai-nameUr','ai-price','ai-code'].forEach(id => document.getElementById(id).value = '');
+      const docRef = await addDoc(collection(firestore, "items"), { nameEn, nameUr, cat, price, code, desc });
+      db.items.push({ id: docRef.id, nameEn, nameUr, cat, price, code, desc });
+      ['ai-nameEn','ai-nameUr','ai-price','ai-code','ai-desc'].forEach(id => document.getElementById(id).value = '');
       document.getElementById('ai-cat').value = '';
       msg.style.color = 'var(--success)'; msg.textContent = 'Item saved successfully!';
       renderCategories(); renderAdminItems();
