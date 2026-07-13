@@ -1203,7 +1203,7 @@ body.dark-mode .floating-cart * {
     if (!item) return;
     const existing = cart.find(c => c.id === itemId);
     if (existing) existing.qty++;
-    else cart.push({ id: itemId, name: item.nameEn, price: item.price, qty: 1 });
+    else cart.push({ id: itemId, name: item.nameEn, price: item.price, qty: 1, code: item.code });
     updateCartUI(); refreshCurrentView(); showToast(`${item.nameEn} added`);
   }
 
@@ -1248,7 +1248,7 @@ body.dark-mode .floating-cart * {
     body.innerHTML = cart.map(c => `
       <div class="cart-item">
         <div style="flex:1;">
-          <div class="cart-item-name">${c.name}</div>
+          <div class="cart-item-name">${c.name}${c.code ? ` <span class="item-code">#${c.code}</span>` : ''}</div>
           <div class="cart-item-price">Rs. ${(c.price * c.qty).toLocaleString()}</div>
         </div>
         <div class="qty-ctrl" style="transform: scale(0.9);">
@@ -1274,7 +1274,7 @@ body.dark-mode .floating-cart * {
 
     const total = cart.reduce((sum,c) => sum + c.price * c.qty, 0);
     const token = '#' + (orderCounter++);
-    const itemsText = cart.map(c => `• ${c.name} x${c.qty} = Rs.${c.price*c.qty}`).join('\n');
+    const itemsText = cart.map(c => `• ${c.name}${c.code ? ` (#${c.code})` : ''} x${c.qty} = Rs.${c.price*c.qty}`).join('\n');
 
     const wa = `Order ${token}\nRoom Number: ${roomNum}\n\n${itemsText}\n\nTotal: Rs.${total}\n\n*Note: All food takes 45 to 60 min to be ready.*`;
 
@@ -1284,18 +1284,49 @@ body.dark-mode .floating-cart * {
   }
 
   // ADMIN PANEL
+  // The PIN is stored as a SHA-256 hash so it isn't sitting in plain text in
+  // view-source. NOTE: this only stops casual snooping — it does not stop
+  // someone from reading/writing Firestore directly, since this app has no
+  // server-side auth. See the Firestore Security Rules note for the real fix.
+  const ADMIN_PIN_HASH = 'e2f691407acb1efa4c9f9f8b1ae626cf6d9a4d96e73e207e9ea7f429293127a8';
+  let adminFailCount = 0;
+  let adminLockUntil = 0;
+
+  async function sha256Hex(text) {
+    const buf = new TextEncoder().encode(text);
+    const hashBuf = await crypto.subtle.digest('SHA-256', buf);
+    return Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+  }
+
   window.openAdminLock = function() {
     document.getElementById('admin-lock-modal').classList.add('show');
     document.getElementById('admin-pin').value = '';
     document.getElementById('lock-error').style.display = 'none';
   }
-  window.verifyAdmin = function() {
-    if (document.getElementById('admin-pin').value === '7860') {
+  window.verifyAdmin = async function() {
+    const errEl = document.getElementById('lock-error');
+    const now = Date.now();
+    if (now < adminLockUntil) {
+      errEl.textContent = `Too many attempts. Try again in ${Math.ceil((adminLockUntil - now) / 1000)}s.`;
+      errEl.style.display = 'block';
+      return;
+    }
+    const enteredHash = await sha256Hex(document.getElementById('admin-pin').value);
+    if (enteredHash === ADMIN_PIN_HASH) {
+      adminFailCount = 0;
       document.getElementById('admin-lock-modal').classList.remove('show');
       document.getElementById('admin-panel').style.display = 'block';
       populateAdminCatDropdown(); renderAdminItems(); renderAdminCats(); renderEmojiPicker(); populateSettingsInputs();
     } else {
-      document.getElementById('lock-error').style.display = 'block';
+      adminFailCount++;
+      if (adminFailCount >= 5) {
+        adminLockUntil = Date.now() + 30000;
+        adminFailCount = 0;
+        errEl.textContent = 'Too many attempts. Try again in 30s.';
+      } else {
+        errEl.textContent = 'Incorrect PIN';
+      }
+      errEl.style.display = 'block';
       document.getElementById('admin-pin').value = '';
     }
   }
