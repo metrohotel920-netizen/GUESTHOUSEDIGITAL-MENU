@@ -194,9 +194,8 @@
 
     .category-header {
       display: flex; align-items: center; gap: 12px;
-      padding: 14px 16px; cursor: pointer;
+      padding: 14px 16px;
     }
-    .category-header:active { background: var(--bg-color); }
 
     .category-header-emoji {
       width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
@@ -214,18 +213,9 @@
     .category-header-urdu { font-family: 'Noto Nastaliq Urdu', serif; font-size: 0.9rem; color: var(--primary-color); margin-top: 2px; }
     .category-header-count { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
 
-    .category-chevron { font-size: 0.9rem; color: var(--text-muted); flex-shrink: 0; transition: transform 0.3s ease; }
-    .category-section.expanded .category-chevron { transform: rotate(180deg); }
-
-    /* Pure-CSS animated accordion using the grid-template-rows trick, so items
-       can appear directly under the category header without JS height math. */
-    .category-body-wrap {
-      display: grid;
-      grid-template-rows: 0fr;
-      transition: grid-template-rows 0.35s ease;
-    }
-    .category-section.expanded .category-body-wrap { grid-template-rows: 1fr; }
-    .category-body-inner { overflow: hidden; }
+    /* Categories are always open — items sit directly below every header
+       with no toggle/interaction needed. */
+    .category-body-wrap { border-top: 1px solid var(--border-color); }
 
     /* Masonry-style packing: CSS multi-column lets item cards of different
        heights (e.g. ones with a description) pack tightly without leaving
@@ -994,48 +984,31 @@ body.dark-mode .floating-cart * {
 
   window.renderCategories = function() {
     const grid = document.getElementById('categories-grid');
-    grid.innerHTML = db.categories.map((cat, i) => {
+    // Categories with no items yet are hidden from the customer-facing menu
+    // entirely (nothing to show) — they still exist and can be managed/filled
+    // in from the admin Categories tab.
+    const visibleCats = db.categories.filter(cat => db.items.some(item => item.cat === cat.id));
+    grid.innerHTML = visibleCats.map((cat, i) => {
       const catItems = db.items.filter(item => item.cat === cat.id);
       const catEmoji = emojiForCat(cat);
       const catGradient = gradientForCat(cat);
 
       return `
       <div class="category-section" id="cat-section-${cat.id}" style="animation:fade-up 0.4s ease ${i*0.02}s both;">
-        <div class="category-header" onclick="toggleCategoryInline('${cat.id}')">
+        <div class="category-header">
           <div class="category-header-emoji" style="background:${catGradient};"><span>${catEmoji}</span></div>
           <div class="category-header-text">
             <div class="category-header-title">${cat.en}</div>
             <div class="category-header-urdu">${cat.ur}</div>
             <div class="category-header-count">${catItems.length} item${catItems.length === 1 ? '' : 's'}</div>
           </div>
-          <div class="category-chevron">&#9660;</div>
         </div>
         <div class="category-body-wrap">
-          <div class="category-body-inner">
-            <div class="items-masonry">${renderItemCards(catItems)}</div>
-          </div>
+          <div class="items-masonry">${renderItemCards(catItems)}</div>
         </div>
       </div>`;
     }).join('');
     twemojiFix(grid);
-  }
-
-  // Items now expand directly underneath their category header (accordion
-  // style) instead of opening a separate page or popup, so the layout never
-  // jumps around. Only one category stays open at a time to keep a 300+ item
-  // menu manageable on a phone screen.
-  window.toggleCategoryInline = function(catId) {
-    const section = document.getElementById('cat-section-' + catId);
-    if (!section) return;
-    const wasExpanded = section.classList.contains('expanded');
-    document.querySelectorAll('.category-section.expanded').forEach(s => {
-      if (s !== section) s.classList.remove('expanded');
-    });
-    section.classList.toggle('expanded', !wasExpanded);
-    closeSearchDropdown();
-    if (!wasExpanded) {
-      setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
-    }
   }
 
   function renderItemCards(items) {
@@ -1119,7 +1092,7 @@ body.dark-mode .floating-cart * {
     if (document.getElementById('search-dropdown').classList.contains('show')) {
       executeSearch();
     }
-    document.querySelectorAll('.category-section.expanded').forEach(section => {
+    document.querySelectorAll('.category-section').forEach(section => {
       const catId = section.id.replace('cat-section-', '');
       const masonry = section.querySelector('.items-masonry');
       if (masonry) masonry.innerHTML = renderItemCards(db.items.filter(i => i.cat === catId));
@@ -1516,9 +1489,6 @@ ${itemLines}
 
     const searchDropdown = document.getElementById('search-dropdown');
     if (searchDropdown && searchDropdown.classList.contains('show')) { closeSearchDropdown(); return true; }
-
-    const expandedSection = document.querySelector('.category-section.expanded');
-    if (expandedSection) { expandedSection.classList.remove('expanded'); return true; }
 
     return false;
   }
