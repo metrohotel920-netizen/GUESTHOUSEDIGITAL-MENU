@@ -36,7 +36,7 @@
       --success: #34D399;
       --shadow: 0 8px 24px rgba(0,0,0,0.45);
     }
-    body, header, .category-card, .menu-item-card, .cart-panel, .modal-box,
+    body, header, .category-section, .menu-item-card, .cart-panel, .modal-box,
     .admin-panel, .floating-cart, .footer-review-card, .icon-btn, .qty-ctrl,
     .admin-tab, .footer-review-card, .item-code {
       transition: background-color 0.4s ease, color 0.4s ease, border-color 0.4s ease;
@@ -174,108 +174,77 @@
     /* ==============================
        CATEGORY GRID
        ============================== */
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-      gap: 14px;
+    /* ==============================
+       CATEGORY ACCORDION (inline expand)
+       ============================== */
+    .category-accordion {
       padding: 0 16px 30px;
-      max-width: 1200px;
+      max-width: 900px;
       margin: 0 auto;
     }
 
-    .category-card {
+    .category-section {
       background: var(--surface-color);
+      border: 1px solid var(--border-color);
       border-radius: 14px;
-      overflow: hidden;
+      margin-bottom: 12px;
       box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 1px solid transparent;
+      overflow: hidden;
     }
-    .category-card:active { transform: scale(0.98); border-color: var(--border-color); }
 
-    .cat-img-wrapper { position: relative; height: 110px; overflow: hidden; }
-    .cat-emoji-tile {
-      width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;
-      position: relative; transition: transform 0.5s;
+    .category-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; cursor: pointer;
     }
-    .cat-emoji-tile::before {
+    .category-header:active { background: var(--bg-color); }
+
+    .category-header-emoji {
+      width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.35rem; position: relative; overflow: hidden;
+    }
+    .category-header-emoji::before {
       content: ''; position: absolute; inset: 0;
       background: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.35), transparent 55%);
     }
-    .cat-emoji-tile .cat-emoji-icon {
-      font-size: 2.6rem; filter: drop-shadow(0 3px 6px rgba(0,0,0,0.18)); position: relative; z-index: 1;
-    }
-    .category-card:active .cat-emoji-tile { transform: scale(1.06); }
+    .category-header-emoji span { position: relative; z-index: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15)); }
 
-    .cat-content { padding: 12px; text-align: center; }
-    .category-card-title { font-size: 0.92rem; font-weight: 600; color: var(--text-main); line-height: 1.25; }
-    .category-card-urdu { font-family: 'Noto Nastaliq Urdu', serif; font-size: 0.95rem; color: var(--primary-color); margin-top: 3px; }
+    .category-header-text { flex: 1; min-width: 0; }
+    .category-header-title { font-size: 1rem; font-weight: 700; color: var(--text-main); line-height: 1.25; }
+    .category-header-urdu { font-family: 'Noto Nastaliq Urdu', serif; font-size: 0.9rem; color: var(--primary-color); margin-top: 2px; }
+    .category-header-count { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
 
-    .expand-arrow {
-      font-size: 0.72rem; color: var(--text-muted); margin-top: 8px; transition: 0.3s;
-    }
-    .category-card.expanded .expand-arrow { transform: rotate(180deg); }
+    .category-chevron { font-size: 0.9rem; color: var(--text-muted); flex-shrink: 0; transition: transform 0.3s ease; }
+    .category-section.expanded .category-chevron { transform: rotate(180deg); }
 
-    .category-items-preview {
-      max-height: 0; overflow: hidden; transition: max-height 0.4s ease; text-align: left;
+    /* Pure-CSS animated accordion using the grid-template-rows trick, so items
+       can appear directly under the category header without JS height math. */
+    .category-body-wrap {
+      display: grid;
+      grid-template-rows: 0fr;
+      transition: grid-template-rows 0.35s ease;
     }
-    .category-card.expanded .category-items-preview { max-height: 400px; margin-top: 12px; border-top: 1px solid var(--border-color); padding-top: 10px; }
+    .category-section.expanded .category-body-wrap { grid-template-rows: 1fr; }
+    .category-body-inner { overflow: hidden; }
 
-    .preview-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--border-color); gap: 6px; }
-    .preview-item:last-child { border-bottom: none; }
-    .preview-item-name { font-size: 0.78rem; color: var(--text-main); font-weight: 500; flex: 1; }
-    .preview-item-price { font-size: 0.78rem; color: var(--primary-color); font-weight: 600; }
-    .preview-add-btn {
-      background: var(--primary-color); color: white; border: none; width: 26px; height: 26px; border-radius: 6px;
-      font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    /* Masonry-style packing: CSS multi-column lets item cards of different
+       heights (e.g. ones with a description) pack tightly without leaving
+       gaps, instead of a rigid same-height grid. */
+    .items-masonry {
+      column-count: 1; column-gap: 12px;
+      padding: 4px 16px 16px;
     }
-
-    .view-full-btn {
-      width: 100%; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border-color);
-      padding: 10px; border-radius: 8px; margin-top: 10px; font-weight: 600; cursor: pointer; transition: 0.2s; font-size: 0.85rem;
-    }
-    .view-full-btn:active { background: var(--primary-color); color: white; border-color: var(--primary-color); }
+    @media (min-width: 640px) { .items-masonry { column-count: 2; } }
+    @media (min-width: 980px) { .items-masonry { column-count: 3; } }
 
     /* ==============================
-       ITEMS VIEW & CARDS
+       ITEM CARDS
        ============================== */
-    .hero-banner {
-      position: relative; height: 180px; width: 100%; overflow: hidden;
-    }
-    .hero-emoji-bg {
-      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
-    }
-    .hero-emoji-bg::before {
-      content: ''; position: absolute; inset: 0;
-      background:
-        radial-gradient(circle at 85% 15%, rgba(255,255,255,0.25), transparent 45%),
-        linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0.05) 65%);
-    }
-    .hero-emoji-watermark {
-      font-size: 7rem; opacity: 0.28; position: relative; z-index: 0;
-      transform: rotate(-8deg); filter: drop-shadow(0 6px 10px rgba(0,0,0,0.15));
-    }
-    .hero-overlay {
-      position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.75), transparent 70%);
-      display: flex; flex-direction: column; justify-content: flex-end; padding: 16px; z-index: 1;
-    }
-    .hero-title { font-size: 1.5rem; font-weight: 700; color: white; line-height: 1.2; display: flex; align-items: center; gap: 10px; }
-    .hero-title .hero-emoji-icon { font-size: 1.6rem; }
-    .hero-urdu { font-family: 'Noto Nastaliq Urdu', serif; font-size: 1.2rem; color: #FFD166; }
-
-    .back-btn-float {
-      position: absolute; top: calc(16px + env(safe-area-inset-top)); left: 16px; background: rgba(255,255,255,0.9); border: none;
-      width: 40px; height: 40px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; z-index: 10;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2); color: var(--text-main);
-    }
-
-    .items-container { padding: 16px; max-width: 800px; margin: 0 auto; }
-
     .menu-item-card {
       background: var(--surface-color); padding: 14px; border-radius: 12px; margin-bottom: 12px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.03); border: 1px solid var(--border-color);
       display: flex; justify-content: space-between; align-items: center; gap: 10px;
+      break-inside: avoid; -webkit-column-break-inside: avoid; page-break-inside: avoid;
     }
 
     .item-info { flex: 1; min-width: 0; }
@@ -382,31 +351,20 @@
        MOBILE REFINEMENTS
        ============================== */
     @media (max-width: 480px) {
-      .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 12px 30px; }
-      .cat-img-wrapper { height: 92px; }
-      .category-card-title { font-size: 0.85rem; }
-      .category-card-urdu { font-size: 0.85rem; }
-      .cat-content { padding: 10px; }
+      .category-accordion { padding: 0 12px 30px; }
+      .category-header-title { font-size: 0.95rem; }
+      .category-header-urdu { font-size: 0.85rem; }
+      .category-header { padding: 12px 14px; }
       .brand-title { font-size: 1.05rem; }
-      .hero-banner { height: 150px; }
-      .hero-title { font-size: 1.25rem; }
-      .hero-urdu { font-size: 1rem; }
       .menu-item-card { padding: 12px; }
       .item-name { font-size: 0.92rem; }
       .item-urdu { font-size: 0.92rem; }
-    }
-
-    @media (max-width: 360px) {
-      .grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
-      .cat-img-wrapper { height: 82px; }
     }
     img.emoji {
       height: 1em; width: 1em; margin: 0 0.03em 0 0.03em; vertical-align: -0.12em;
       display: inline-block;
     }
-    .cat-emoji-icon img.emoji { height: 2.3rem; width: 2.3rem; vertical-align: middle; }
-    .hero-emoji-icon img.emoji { height: 1.4rem; width: 1.4rem; vertical-align: -0.2em; }
-    .hero-emoji-watermark img.emoji { height: 6rem; width: 6rem; }
+    .category-header-emoji span img.emoji { height: 1.35rem; width: 1.35rem; vertical-align: middle; }
     
     /* ==============================
        FOOTER: REVIEWS & SOCIAL LINKS
@@ -531,7 +489,7 @@ body.dark-mode .floating-cart * {
       </div>
     </div>
     <div class="section-title">Explore Our Menu</div>
-    <div id="categories-grid" class="grid"></div>
+    <div id="categories-grid" class="category-accordion"></div>
 
     <div class="footer-links">
       <div class="footer-review-card">
@@ -556,21 +514,6 @@ body.dark-mode .floating-cart * {
         </a>
       </div>
     </div>
-  </div>
-
-  <!-- ITEMS VIEW -->
-  <div id="items-view" style="display: none;">
-    <div class="hero-banner" id="hero-banner">
-      <button class="back-btn-float" onclick="goBack()">←</button>
-      <div class="hero-emoji-bg">
-        <span id="hero-emoji-watermark" class="hero-emoji-watermark">🍽️</span>
-      </div>
-      <div class="hero-overlay">
-        <div id="cat-hero-title" class="hero-title"><span id="cat-hero-emoji" class="hero-emoji-icon">🍽️</span><span id="cat-hero-title-text">Category</span></div>
-        <div id="cat-hero-urdu" class="hero-urdu">کیٹیگری</div>
-      </div>
-    </div>
-    <div id="items-list" class="items-container"></div>
   </div>
 
   <!-- CART PANEL -->
@@ -654,21 +597,6 @@ body.dark-mode .floating-cart * {
     </div>
   </div>
 
-  <!-- QUICK VIEW MODAL -->
-  <div id="quick-view-modal" class="modal-overlay" onclick="if(event.target===this) closeQuickView()">
-    <div class="modal-box" style="max-width: 380px; text-align: left;">
-      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:10px;">
-        <div>
-          <h3 id="quick-view-title" style="margin-bottom:2px;">Category</h3>
-          <div id="quick-view-urdu" style="font-family:'Noto Nastaliq Urdu',serif; font-size:0.95rem; color:var(--primary-color);"></div>
-        </div>
-        <button onclick="closeQuickView()" style="background:none; border:none; font-size:1.3rem; line-height:1; cursor:pointer; color:var(--text-muted);">&times;</button>
-      </div>
-      <div id="quick-view-items" style="max-height:50vh; overflow-y:auto;"></div>
-      <button id="quick-view-full-btn" class="view-full-btn" style="margin-top:14px;">View Full Category</button>
-    </div>
-  </div>
-
   <div id="toast" class="toast">Message</div>
 
   <!-- ADMIN PANEL -->
@@ -697,6 +625,11 @@ body.dark-mode .floating-cart * {
     </div>
 
     <div id="tab-manage-items" class="admin-tab-content" style="display:none;">
+      <div style="background:var(--surface-color); padding:14px; border-radius:10px; margin-bottom:16px; border:1px solid var(--border-color);">
+        <div style="font-weight:600; color:var(--text-main); margin-bottom:4px;">Backup Your Menu Data</div>
+        <div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:10px;">Downloads a .js file with all current categories &amp; items, ready to paste into the getDefaultData() function in the code as a permanent backup.</div>
+        <button class="admin-btn" style="margin-top:0;" onclick="exportMenuBackup()">Download Backup (.js)</button>
+      </div>
       <div id="admin-items-list"></div>
     </div>
 
@@ -1063,83 +996,46 @@ body.dark-mode .floating-cart * {
     const grid = document.getElementById('categories-grid');
     grid.innerHTML = db.categories.map((cat, i) => {
       const catItems = db.items.filter(item => item.cat === cat.id);
-      const previewItems = catItems.map(item => `
-        <div class="preview-item">
-          <span class="preview-item-name">${item.nameEn}</span>
-          <span class="preview-item-price">Rs. ${Number(item.price).toLocaleString()}</span>
-          <button class="preview-add-btn" onclick="event.stopPropagation(); addToCart('${item.id}')">+</button>
-        </div>`).join('');
-
       const catEmoji = emojiForCat(cat);
       const catGradient = gradientForCat(cat);
 
       return `
-      <div class="category-card" onclick="openQuickView('${cat.id}')" style="animation:fade-up 0.4s ease ${i*0.03}s both;">
-        <div class="cat-img-wrapper" onclick="event.stopPropagation(); openCategory('${cat.id}')">
-           <div class="cat-emoji-tile" style="background:${catGradient};"><span class="cat-emoji-icon">${catEmoji}</span></div>
+      <div class="category-section" id="cat-section-${cat.id}" style="animation:fade-up 0.4s ease ${i*0.02}s both;">
+        <div class="category-header" onclick="toggleCategoryInline('${cat.id}')">
+          <div class="category-header-emoji" style="background:${catGradient};"><span>${catEmoji}</span></div>
+          <div class="category-header-text">
+            <div class="category-header-title">${cat.en}</div>
+            <div class="category-header-urdu">${cat.ur}</div>
+            <div class="category-header-count">${catItems.length} item${catItems.length === 1 ? '' : 's'}</div>
+          </div>
+          <div class="category-chevron">&#9660;</div>
         </div>
-        <div class="cat-content">
-          <div class="category-card-title">${cat.en}</div>
-          <div class="category-card-urdu">${cat.ur}</div>
-          <div class="expand-arrow">&#9660; Quick View (${catItems.length})</div>
+        <div class="category-body-wrap">
+          <div class="category-body-inner">
+            <div class="items-masonry">${renderItemCards(catItems)}</div>
+          </div>
         </div>
       </div>`;
     }).join('');
     twemojiFix(grid);
   }
 
-  // Quick View now opens a small popup modal instead of expanding the card
-  // inline, so the main menu layout is never disturbed.
-  window.openQuickView = function(catId) {
-    const cat = db.categories.find(c => c.id === catId);
-    if (!cat) return;
-    const catItems = db.items.filter(item => item.cat === catId);
-    const previewItems = catItems.map(item => `
-      <div class="preview-item">
-        <span class="preview-item-name">${item.nameEn}</span>
-        <span class="preview-item-price">Rs. ${Number(item.price).toLocaleString()}</span>
-        <button class="preview-add-btn" onclick="event.stopPropagation(); addToCart('${item.id}')">+</button>
-      </div>`).join('');
-
-    document.getElementById('quick-view-title').textContent = cat.en;
-    document.getElementById('quick-view-urdu').textContent = cat.ur;
-    document.getElementById('quick-view-items').innerHTML = previewItems || '<div style="text-align:center; padding:20px; color:var(--text-muted);">No items in this category yet.</div>';
-    document.getElementById('quick-view-full-btn').setAttribute('onclick', `closeQuickView(); openCategory('${catId}')`);
-
-    const modal = document.getElementById('quick-view-modal');
-    modal.classList.add('show');
-    twemojiFix(modal);
-  }
-
-  window.closeQuickView = function() {
-    document.getElementById('quick-view-modal').classList.remove('show');
-  }
-
-  window.openCategory = function(catId) {
-    const cat = db.categories.find(c => c.id === catId);
-    if (!cat) return;
-    document.getElementById('cat-hero-title-text').textContent = cat.en;
-    document.getElementById('cat-hero-urdu').textContent = cat.ur;
-
-    const catEmoji = emojiForCat(cat);
-    const catGradient = gradientForCat(cat);
-    document.getElementById('cat-hero-emoji').textContent = catEmoji;
-    document.getElementById('hero-emoji-watermark').textContent = catEmoji;
-    document.getElementById('hero-banner').style.background = catGradient;
-    twemojiFix(document.getElementById('hero-banner'));
-
-    const items = db.items.filter(i => i.cat === catId);
-    document.getElementById('items-list').innerHTML = renderItemCards(items);
-    document.getElementById('main-view').style.display = 'none';
-    document.getElementById('items-view').style.display = 'block';
+  // Items now expand directly underneath their category header (accordion
+  // style) instead of opening a separate page or popup, so the layout never
+  // jumps around. Only one category stays open at a time to keep a 300+ item
+  // menu manageable on a phone screen.
+  window.toggleCategoryInline = function(catId) {
+    const section = document.getElementById('cat-section-' + catId);
+    if (!section) return;
+    const wasExpanded = section.classList.contains('expanded');
+    document.querySelectorAll('.category-section.expanded').forEach(s => {
+      if (s !== section) s.classList.remove('expanded');
+    });
+    section.classList.toggle('expanded', !wasExpanded);
     closeSearchDropdown();
-    window.scrollTo(0,0);
-  }
-
-  window.goBack = function() {
-    document.getElementById('items-view').style.display = 'none';
-    document.getElementById('main-view').style.display = 'block';
-    window.scrollTo(0,0);
+    if (!wasExpanded) {
+      setTimeout(() => section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 120);
+    }
   }
 
   function renderItemCards(items) {
@@ -1223,11 +1119,11 @@ body.dark-mode .floating-cart * {
     if (document.getElementById('search-dropdown').classList.contains('show')) {
       executeSearch();
     }
-    if (document.getElementById('items-view').style.display === 'block') {
-      const catTitle = document.getElementById('cat-hero-title').textContent;
-      const cat = db.categories.find(c => c.en === catTitle);
-      if (cat) document.getElementById('items-list').innerHTML = renderItemCards(db.items.filter(i => i.cat === cat.id));
-    }
+    document.querySelectorAll('.category-section.expanded').forEach(section => {
+      const catId = section.id.replace('cat-section-', '');
+      const masonry = section.querySelector('.items-masonry');
+      if (masonry) masonry.innerHTML = renderItemCards(db.items.filter(i => i.cat === catId));
+    });
   }
 
   function updateCartUI() {
@@ -1358,6 +1254,56 @@ body.dark-mode .floating-cart * {
     const sel = document.getElementById('ai-cat');
     sel.innerHTML = '<option value="">-- Select Category --</option>' +
       db.categories.map(c => `<option value="${c.id}">${c.en}</option>`).join('');
+  }
+
+  // Generates a paste-ready copy of the live Firestore menu (categories +
+  // items) as a downloadable .js file, formatted to match getDefaultData().
+  // This is the "restore point" backup: since Firebase is the live source of
+  // truth, this lets the code's built-in fallback be refreshed periodically
+  // so the menu is never fully dependent on the database staying online.
+  window.exportMenuBackup = function() {
+    const catLines = db.categories.map(c => {
+      const emoji = emojiForCat(c);
+      return `        { id:${JSON.stringify(c.id)}, en:${JSON.stringify(c.en)}, ur:${JSON.stringify(c.ur)}, emoji:${JSON.stringify(emoji)} }`;
+    }).join(',\n');
+
+    const itemLines = db.items.map(i => {
+      const parts = [
+        `id:${JSON.stringify(i.id)}`,
+        `nameEn:${JSON.stringify(i.nameEn)}`,
+        `nameUr:${JSON.stringify(i.nameUr)}`,
+        `cat:${JSON.stringify(i.cat)}`,
+        `price:${Number(i.price) || 0}`,
+        `code:${JSON.stringify(i.code)}`
+      ];
+      if (i.desc) parts.push(`desc:${JSON.stringify(i.desc)}`);
+      return `        { ${parts.join(', ')} }`;
+    }).join(',\n');
+
+    const output = `// ===== MENU BACKUP — generated ${new Date().toLocaleString()} =====
+// ${db.categories.length} categories, ${db.items.length} items.
+// To restore: paste the "categories" and "items" arrays below to REPLACE
+// the ones inside getDefaultData() in the HTML file's <script> tag.
+{
+  categories: [
+${catLines}
+  ],
+  items: [
+${itemLines}
+  ]
+}
+`;
+
+    const blob = new Blob([output], { type: 'text/javascript' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `menu-backup-${new Date().toISOString().slice(0,10)}.js`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Backup downloaded');
   }
 
   function getItemCodeSortValue(code) {
@@ -1549,6 +1495,53 @@ body.dark-mode .floating-cart * {
     t.textContent = msg; t.classList.add('show');
     setTimeout(() => t.classList.remove('show'), 2000);
   }
+
+  // ==============================
+  // DOUBLE-TAP BACK TO EXIT (mobile)
+  // ==============================
+  // Pressing the phone's Back button never immediately leaves the page.
+  // First press: if something is open (cart, a modal, an expanded category,
+  // the search dropdown) it just closes that. Otherwise it shows "Press
+  // again to exit" and arms a 2-second window. A second Back press within
+  // that window is allowed through to actually navigate away / exit.
+  function closeTopOverlay() {
+    const cartPanel = document.getElementById('cart-panel');
+    if (cartPanel && cartPanel.classList.contains('open')) { closeCart(); return true; }
+
+    const adminPanel = document.getElementById('admin-panel');
+    if (adminPanel && adminPanel.style.display === 'block') { closeAdminPanel(); return true; }
+
+    const openModal = document.querySelector('.modal-overlay.show');
+    if (openModal) { openModal.classList.remove('show'); return true; }
+
+    const searchDropdown = document.getElementById('search-dropdown');
+    if (searchDropdown && searchDropdown.classList.contains('show')) { closeSearchDropdown(); return true; }
+
+    const expandedSection = document.querySelector('.category-section.expanded');
+    if (expandedSection) { expandedSection.classList.remove('expanded'); return true; }
+
+    return false;
+  }
+
+  let exitArmed = false;
+  let exitArmTimer = null;
+  history.pushState({ menuGuard: true }, '', location.href);
+
+  window.addEventListener('popstate', function() {
+    if (closeTopOverlay()) {
+      history.pushState({ menuGuard: true }, '', location.href);
+      return;
+    }
+    if (!exitArmed) {
+      history.pushState({ menuGuard: true }, '', location.href);
+      exitArmed = true;
+      showToast('Press back again to exit');
+      clearTimeout(exitArmTimer);
+      exitArmTimer = setTimeout(() => { exitArmed = false; }, 2000);
+    }
+    // Second press within the window: don't re-push state, so this
+    // popstate is allowed to actually navigate back / exit the app.
+  });
   </script>
 </body>
 </html>
